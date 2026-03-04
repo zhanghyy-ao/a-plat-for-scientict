@@ -5,17 +5,17 @@
 @tailwind utilities;
 
 :root {
-  /* 主色调 - 更现代的紫色和蓝色渐变系 */
-  --primary: #8b5cf6;
-  --primary-dark: #7c3aed;
-  --primary-light: #a78bfa;
-  --secondary: #ec4899;
-  --secondary-dark: #db2777;
-  --accent: #06b6d4;
+  /* 主色调 - 深蓝到浅蓝的色系 */
+  --primary: #1e40af;
+  --primary-dark: #1e3a8a;
+  --primary-light: #3b82f6;
+  --secondary: #0ea5e9;
+  --secondary-dark: #0284c7;
+  --accent: #38bdf8;
   
   /* 背景色 */
-  --background: #0f0a1e;
-  --background-light: #1a142e;
+  --background: #0f172a;
+  --background-light: #1e293b;
   --dark-gray: #1e1e1e;
   --blue-gray: #1e3a5f;
   
@@ -31,18 +31,18 @@
   --card: #1e293b;
   --card-hover: #334155;
   
-  /* 现代化配色 - 更加鲜明的科幻风 */
-  --electric-blue: #6366f1;
-  --neon-cyan: #06b6d4;
-  --neon-purple: #a855f7;
-  --neon-pink: #ec4899;
+  /* 现代化配色 - 深蓝到浅蓝的色系 */
+  --electric-blue: #3b82f6;
+  --neon-cyan: #0ea5e9;
+  --neon-purple: #38bdf8;
+  --neon-pink: #7dd3fc;
   --medium-gray: #808080;
-  --cyan-light: #22d3ee;
-  --purple-light: #c084fc;
-  --pink-light: #f472b6;
-  --violet-deep: #7c3aed;
-  --indigo-bright: #4f46e5;
-  --teal-glow: #14b8a6;
+  --cyan-light: #38bdf8;
+  --purple-light: #60a5fa;
+  --pink-light: #93c5fd;
+  --violet-deep: #1d4ed8;
+  --indigo-bright: #2563eb;
+  --teal-glow: #06b6d4;
 }
 
 body {
@@ -119,11 +119,11 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at 15% 30%, rgba(168, 85, 247, 0.18) 0%, transparent 45%),
-              radial-gradient(circle at 85% 25%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
-              radial-gradient(circle at 35% 75%, rgba(236, 72, 153, 0.12) 0%, transparent 48%),
-              radial-gradient(circle at 70% 60%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
-              radial-gradient(circle at 50% 10%, rgba(34, 211, 238, 0.1) 0%, transparent 40%);
+  background: radial-gradient(circle at 15% 30%, rgba(37, 99, 235, 0.18) 0%, transparent 45%),
+              radial-gradient(circle at 85% 25%, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
+              radial-gradient(circle at 35% 75%, rgba(59, 130, 246, 0.12) 0%, transparent 48%),
+              radial-gradient(circle at 70% 60%, rgba(96, 165, 250, 0.12) 0%, transparent 45%),
+              radial-gradient(circle at 50% 10%, rgba(56, 189, 248, 0.1) 0%, transparent 40%);
   z-index: -1;
   animation: floatGlow 15s ease-in-out infinite;
 }
@@ -187,10 +187,10 @@ h1, h2, h3, h4, h5, h6 {
 /* 脉冲光晕效果 */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(168, 85, 247, 0.5), 0 0 60px rgba(6, 182, 212, 0.2);
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.5), 0 0 60px rgba(14, 165, 233, 0.2);
   }
 }
 
@@ -323,6 +323,16 @@ select:focus {
   outline: none;
   ring: 2px solid var(--primary);
   border-color: var(--primary);
+}
+
+/* 隐藏滚动条但保持滚动功能 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* 响应式调整 */

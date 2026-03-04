@@ -129,12 +129,12 @@ const GlassMessagesPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center particle-bg">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-transparent border-t-purple-500 border-r-cyan-500 rounded-full mx-auto mb-6"
+            className="w-16 h-16 border-4 border-transparent border-t-blue-500 border-r-cyan-500 rounded-full mx-auto mb-6"
           />
           <p className="text-white/80 text-lg font-rajdhani tracking-wider">LOADING</p>
         </div>
@@ -143,8 +143,8 @@ const GlassMessagesPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 particle-bg">
-      <div className="flex h-screen">
+    <div className="particle-bg">
+      <div className="flex h-[calc(100vh-200px)]">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -154,7 +154,7 @@ const GlassMessagesPage: React.FC = () => {
           <div className="glass-strong rounded-3xl flex-1 flex flex-col overflow-hidden">
             <div className="p-6 border-b border-white/10">
               <h1 className="text-2xl font-bold font-orbitron text-white mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-sky-500 rounded-xl flex items-center justify-center">
                   <FaInbox className="text-lg text-white" />
                 </div>
                 消息中心
@@ -166,7 +166,7 @@ const GlassMessagesPage: React.FC = () => {
                   placeholder="搜索学生..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                 />
               </div>
             </div>
@@ -188,7 +188,7 @@ const GlassMessagesPage: React.FC = () => {
                       whileTap={{ scale: 0.98 }}
                       className={`glass-light rounded-2xl p-4 cursor-pointer transition-all duration-300 ${
                         selectedStudent?.id === student.id 
-                          ? 'bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30' 
+                          ? 'bg-gradient-to-r from-blue-600/20 to-sky-500/20 border border-blue-500/30' 
                           : 'hover:bg-white/10'
                       }`}
                     >
@@ -196,7 +196,7 @@ const GlassMessagesPage: React.FC = () => {
                         <motion.div
                           whileHover={{ rotate: 360 }}
                           transition={{ duration: 0.6 }}
-                          className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-blue-500/25"
+                          className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-500 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-blue-500/25"
                         >
                           {student.name?.charAt(0) || 'S'}
                         </motion.div>
@@ -232,7 +232,7 @@ const GlassMessagesPage: React.FC = () => {
                 <motion.div
                   animate={{ float: [0, -10, 0] }}
                   transition={{ duration: 3, repeat: Infinity }}
-                  className="w-24 h-24 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6"
+                  className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-sky-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6"
                 >
                   <FaUserCircle className="w-12 h-12 text-white/40" />
                 </motion.div>
@@ -245,12 +245,12 @@ const GlassMessagesPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-6 border-b border-white/10 bg-gradient-to-r from-purple-500/10 to-cyan-500/10"
+                className="p-6 border-b border-white/10 bg-gradient-to-r from-blue-600/10 to-sky-500/10"
               >
                 <div className="flex items-center gap-4">
                   <motion.div
                     whileHover={{ scale: 1.1, rotate: 5 }}
-                    className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-500/25"
+                    className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-500 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-500/25"
                   >
                     {selectedStudent.name?.charAt(0) || 'S'}
                   </motion.div>
@@ -302,7 +302,7 @@ const GlassMessagesPage: React.FC = () => {
                             <div
                               className={`max-w-[70%] rounded-2xl p-4 relative ${
                                 msg.sender_id === user?.id
-                                  ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-br-sm shadow-lg shadow-purple-500/30'
+                                  ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-br-sm shadow-lg shadow-blue-500/30'
                                   : 'glass text-white rounded-bl-sm'
                               }`}
                             >
@@ -317,7 +317,7 @@ const GlassMessagesPage: React.FC = () => {
                                 </p>
                                 {msg.sender_id === user?.id && (
                                   msg.is_read ? (
-                                    <FaCheckDouble className="text-xs text-cyan-300" />
+                                    <FaCheckDouble className="text-xs text-sky-300" />
                                   ) : (
                                     <FaCheck className="text-xs text-white/50" />
                                   )
@@ -357,7 +357,7 @@ const GlassMessagesPage: React.FC = () => {
                         }
                       }}
                       placeholder="输入消息..."
-                      className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all resize-none"
+                      className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all resize-none"
                       rows={1}
                     />
                   </div>
@@ -368,7 +368,7 @@ const GlassMessagesPage: React.FC = () => {
                     whileTap={{ scale: 0.9 }}
                     className={`p-4 rounded-2xl transition-all duration-300 ${
                       newMessage.trim() && !isSending
-                        ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:shadow-lg hover:shadow-purple-500/40'
+                        ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white hover:shadow-lg hover:shadow-blue-500/40'
                         : 'bg-white/10 text-white/30 cursor-not-allowed'
                     }`}
                   >

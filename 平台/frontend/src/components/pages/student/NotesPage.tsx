@@ -92,13 +92,13 @@ const NotesPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex gradient-bg particle-bg">
       <Sidebar type="student" />
       
-      <div className="flex-1 ml-64 flex flex-col gradient-bg particle-bg">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header title="个人笔记" subtitle="记录您的学习心得和灵感" />
         
-        <div className="flex-1 container mx-auto px-6 py-8">
+        <main className="flex-1 container mx-auto px-6 py-8">
           <Card className="p-6 mb-6 glass">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
               <div className="flex-1 max-w-xl">
@@ -233,7 +233,7 @@ const NotesPage: React.FC = () => {
               )}
             </div>
           )}
-        </div>
+        </main>
 
         {showAddModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">

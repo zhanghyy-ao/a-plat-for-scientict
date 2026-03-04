@@ -8,8 +8,20 @@ import TeamMemberCard from '../ui/TeamMemberCard';
 import Button from '../common/Button';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import MentorLayout from '../layout/MentorLayout';
+import GlassMentorDashboard from './mentor/GlassMentorDashboard';
 
 const HomePage: React.FC = () => {
+  const { user } = useAuth();
+  
+  if (user?.role === 'mentor') {
+    return (
+      <MentorLayout>
+        <GlassMentorDashboard />
+      </MentorLayout>
+    );
+  }
   // 模拟数据
   const latestNews = [
     {

@@ -131,12 +131,12 @@ const GlassPendingProgressPage: React.FC = () => {
 
   if (isLoading && viewMode === 'list') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center particle-bg">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-transparent border-t-purple-500 border-r-cyan-500 rounded-full mx-auto mb-6"
+            className="w-16 h-16 border-4 border-transparent border-t-blue-500 border-r-cyan-500 rounded-full mx-auto mb-6"
           />
           <p className="text-white/80 text-lg font-rajdhani tracking-wider">LOADING</p>
         </div>
@@ -146,7 +146,7 @@ const GlassPendingProgressPage: React.FC = () => {
 
   if (viewMode === 'detail' && selectedProgress) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 particle-bg py-8">
+      <div className="particle-bg py-8">
         <div className="max-w-5xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -172,7 +172,7 @@ const GlassPendingProgressPage: React.FC = () => {
             <div className="flex items-center mb-8 pb-8 border-b border-white/10">
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
-                className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center text-white text-3xl font-bold mr-6 shadow-lg shadow-blue-500/30"
+                className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-500 rounded-3xl flex items-center justify-center text-white text-3xl font-bold mr-6 shadow-lg shadow-blue-500/30"
               >
                 {studentInfo?.name?.charAt(0) || 'S'}
               </motion.div>
@@ -190,7 +190,7 @@ const GlassPendingProgressPage: React.FC = () => {
               </div>
               <div className="text-right">
                 <p className="text-white/50 text-sm font-rajdhani">完成度</p>
-                <p className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 text-4xl">{selectedProgress.completion}%</p>
+                <p className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-sky-400 text-4xl">{selectedProgress.completion}%</p>
               </div>
             </div>
 
@@ -227,7 +227,7 @@ const GlassPendingProgressPage: React.FC = () => {
                 initial={{ width: 0 }}
                 animate={{ width: `${selectedProgress.completion}%` }}
                 transition={{ duration: 1.5 }}
-                className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full"
+                className="h-full bg-gradient-to-r from-blue-600 to-sky-500 rounded-full"
               />
             </div>
           </motion.div>
@@ -292,7 +292,7 @@ const GlassPendingProgressPage: React.FC = () => {
                   rows={6}
                   value={feedbackForm.content}
                   onChange={(e) => setFeedbackForm({ ...feedbackForm, content: e.target.value })}
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
+                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                   placeholder="请输入您的反馈意见..."
                 />
               </div>
@@ -312,7 +312,7 @@ const GlassPendingProgressPage: React.FC = () => {
                   disabled={isLoading}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-2xl hover:shadow-lg hover:shadow-purple-500/40 transition-all disabled:opacity-50"
+                  className="px-8 py-4 bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-2xl hover:shadow-lg hover:shadow-blue-500/40 transition-all disabled:opacity-50"
                 >
                   {isLoading ? '提交中...' : '提交反馈'}
                 </motion.button>
@@ -325,7 +325,7 @@ const GlassPendingProgressPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 particle-bg py-8">
+    <div className="particle-bg py-8">
       <div className="max-w-6xl mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -369,7 +369,7 @@ const GlassPendingProgressPage: React.FC = () => {
                         <motion.div
                           whileHover={{ rotate: 360 }}
                           transition={{ duration: 0.6 }}
-                          className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold mr-6 shadow-lg shadow-blue-500/25"
+                          className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-500 rounded-2xl flex items-center justify-center text-white text-xl font-bold mr-6 shadow-lg shadow-blue-500/25"
                         >
                           <FaUserGraduate />
                         </motion.div>
@@ -386,7 +386,7 @@ const GlassPendingProgressPage: React.FC = () => {
                               initial={{ width: 0 }}
                               animate={{ width: `${progress.completion}%` }}
                               transition={{ duration: 1, delay: index * 0.1 }}
-                              className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full"
+                              className="h-full bg-gradient-to-r from-blue-600 to-sky-500 rounded-full"
                             />
                           </div>
                           <p className="text-white/50 text-sm mt-2 font-rajdhani">完成度：{progress.completion}%</p>
@@ -398,7 +398,7 @@ const GlassPendingProgressPage: React.FC = () => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => navigate(`/pending-progress/${progress.id}`)}
-                        className="px-8 py-4 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-purple-500/40 transition-all"
+                        className="px-8 py-4 bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-blue-500/40 transition-all"
                       >
                         审阅
                       </motion.button>

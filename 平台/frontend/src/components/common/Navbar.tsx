@@ -80,7 +80,7 @@ const Navbar: React.FC<NavbarProps> = ({ className = '' }) => {
                 )}
                 {(user?.role === 'admin' || user?.role === 'mentor') && (
                   <NavLink
-                    to="/mentor-management"
+                    to={user?.role === 'admin' ? '/mentor-management' : '/'}
                     className="font-rajdhani font-medium transition-colors text-white hover:text-electric-blue"
                   >
                     {user?.role === 'admin' ? '导师管理' : '导师中心'}
@@ -181,7 +181,7 @@ const Navbar: React.FC<NavbarProps> = ({ className = '' }) => {
                     )}
                     {(user?.role === 'admin' || user?.role === 'mentor') && (
                       <NavLink
-                        to="/mentor-management"
+                        to={user?.role === 'admin' ? '/mentor-management' : '/'}
                         className="font-rajdhani font-medium transition-colors py-2 text-white hover:text-electric-blue"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >

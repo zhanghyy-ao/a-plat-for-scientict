@@ -5,7 +5,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { myApi, studentApi } from '../../../utils/api';
 import { 
   FaUserGraduate, FaSearch, FaArrowLeft, FaCalendarAlt, 
-  FaUser, FaBook, FaFlask, FaEnvelope, FaMessage
+  FaUser, FaBook, FaFlask, FaEnvelope, FaComments
 } from 'react-icons/fa';
 
 const GlassMyStudentsPage: React.FC = () => {
@@ -109,12 +109,12 @@ const GlassMyStudentsPage: React.FC = () => {
 
   if (isLoading && viewMode === 'list') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center particle-bg">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-transparent border-t-purple-500 border-r-cyan-500 rounded-full mx-auto mb-6"
+            className="w-16 h-16 border-4 border-transparent border-t-blue-500 border-r-cyan-500 rounded-full mx-auto mb-6"
           />
           <p className="text-white/80 text-lg font-rajdhani tracking-wider">LOADING</p>
         </div>
@@ -124,7 +124,7 @@ const GlassMyStudentsPage: React.FC = () => {
 
   if (viewMode === 'detail' && selectedStudent) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 particle-bg py-8">
+      <div className="particle-bg py-8">
         <div className="max-w-6xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -150,7 +150,7 @@ const GlassMyStudentsPage: React.FC = () => {
             <div className="flex items-center mb-8">
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
-                className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center text-white text-4xl font-bold mr-6 shadow-lg shadow-blue-500/30"
+                className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-500 rounded-3xl flex items-center justify-center text-white text-4xl font-bold mr-6 shadow-lg shadow-blue-500/30"
               >
                 {selectedStudent.name?.charAt(0) || 'S'}
               </motion.div>
@@ -182,7 +182,7 @@ const GlassMyStudentsPage: React.FC = () => {
                 className="glass rounded-2xl p-6"
               >
                 <h3 className="font-semibold font-orbitron text-white mb-4 flex items-center gap-2">
-                  <FaFlask className="text-cyan-400" />
+                  <FaFlask className="text-sky-400" />
                   研究信息
                 </h3>
                 <div className="space-y-3">
@@ -198,9 +198,9 @@ const GlassMyStudentsPage: React.FC = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/messages')}
-                className="flex-1 py-4 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-2xl font-semibold flex items-center justify-center gap-3 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all"
+                className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-2xl font-semibold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all"
               >
-                <FaMessage />
+                <FaComments />
                 发送消息
               </motion.button>
             </div>
@@ -248,7 +248,7 @@ const GlassMyStudentsPage: React.FC = () => {
                       <div className="flex items-center gap-4 ml-6">
                         <div className="text-right">
                           <p className="text-white/50 text-xs font-rajdhani">完成度</p>
-                          <p className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 text-2xl">{progress.completion}%</p>
+                          <p className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-sky-400 text-2xl">{progress.completion}%</p>
                         </div>
                         <div className={`px-4 py-2 bg-gradient-to-r ${getStatusColor(progress.status)} rounded-xl text-white text-sm font-semibold`}>
                           {getStatusText(progress.status)}
@@ -278,7 +278,7 @@ const GlassMyStudentsPage: React.FC = () => {
                           initial={{ width: 0 }}
                           animate={{ width: `${progress.completion}%` }}
                           transition={{ duration: 1, delay: index * 0.1 }}
-                          className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full"
+                          className="h-full bg-gradient-to-r from-blue-600 to-sky-500 rounded-full"
                         />
                       </div>
                     </div>
@@ -293,7 +293,7 @@ const GlassMyStudentsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 particle-bg py-8">
+    <div className="particle-bg py-8">
       <div className="max-w-7xl mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -318,7 +318,7 @@ const GlassMyStudentsPage: React.FC = () => {
               placeholder="搜索学生姓名或学号..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
+              className="w-full pl-14 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
             />
           </div>
         </motion.div>
@@ -356,7 +356,7 @@ const GlassMyStudentsPage: React.FC = () => {
                     <motion.div
                       whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.6 }}
-                      className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold mr-4 shadow-lg shadow-blue-500/25"
+                      className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-500 rounded-2xl flex items-center justify-center text-white text-xl font-bold mr-4 shadow-lg shadow-blue-500/25"
                     >
                       {student.name?.charAt(0) || 'S'}
                     </motion.div>
@@ -384,7 +384,7 @@ const GlassMyStudentsPage: React.FC = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="w-full py-3 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/40 transition-all"
+                      className="w-full py-3 bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/40 transition-all"
                     >
                       查看详情
                     </motion.button>

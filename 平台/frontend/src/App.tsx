@@ -15,18 +15,19 @@ import AboutManagement from './components/pages/content/AboutManagement';
 import ContactManagement from './components/pages/content/ContactManagement';
 import LoginPage from './components/pages/LoginPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
-import MyStudentsPage from './components/pages/mentor/MyStudentsPage';
-import ProgressPage from './components/pages/student/ProgressPage';
-import PendingProgressPage from './components/pages/mentor/PendingProgressPage';
+import MentorLayout from './components/layout/MentorLayout';
 import DashboardPage from './components/pages/student/DashboardPage';
 import ResourcesPage from './components/pages/student/ResourcesPage';
 import NotesPage from './components/pages/student/NotesPage';
+import ProgressPage from './components/pages/student/ProgressPage';
 import EnhancedStudentHub from './components/pages/student/EnhancedStudentHub';
+import StudentProfilePage from './components/pages/student/StudentProfilePage';
 import AdminStudentManagement from './components/pages/admin/AdminStudentManagement';
 import GlassMentorDashboard from './components/pages/mentor/GlassMentorDashboard';
-import GlassMessagesPage from './components/pages/mentor/GlassMessagesPage';
 import GlassMyStudentsPage from './components/pages/mentor/GlassMyStudentsPage';
 import GlassPendingProgressPage from './components/pages/mentor/GlassPendingProgressPage';
+import GlassMessagesPage from './components/pages/mentor/GlassMessagesPage';
+import GlassMentorProfilePage from './components/pages/mentor/GlassMentorProfilePage';
 
 const AppContent: React.FC = () => {
   const { login } = useAuth();
@@ -50,7 +51,7 @@ const AppContent: React.FC = () => {
       await login(username, password);
       
       if (data.user?.role === 'mentor') {
-        navigate('/mentor-dashboard');
+        navigate('/');
       } else if (data.user?.role === 'student') {
         navigate('/dashboard');
       } else if (data.user?.role === 'admin') {
@@ -82,17 +83,20 @@ const AppContent: React.FC = () => {
         <Route path="/content-management/achievements" element={<AchievementsManagement />} />
         <Route path="/content-management/about" element={<AboutManagement />} />
         <Route path="/content-management/contact" element={<ContactManagement />} />
-        <Route path="/mentor-dashboard" element={<GlassMentorDashboard />} />
-        <Route path="/my-students" element={<GlassMyStudentsPage />} />
-        <Route path="/my-students/:studentId" element={<GlassMyStudentsPage />} />
-        <Route path="/progress" element={<ProgressPage />} />
-        <Route path="/progress/:progressId" element={<ProgressPage />} />
-        <Route path="/pending-progress" element={<GlassPendingProgressPage />} />
-        <Route path="/pending-progress/:progressId" element={<GlassPendingProgressPage />} />
+        
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/student-profile" element={<StudentProfilePage />} />
         <Route path="/resources" element={<ResourcesPage />} />
         <Route path="/notes" element={<NotesPage />} />
-        <Route path="/messages" element={<GlassMessagesPage />} />
+        <Route path="/progress" element={<ProgressPage />} />
+        <Route path="/progress/:progressId" element={<ProgressPage />} />
+        
+        <Route path="/my-students" element={<MentorLayout><GlassMyStudentsPage /></MentorLayout>} />
+        <Route path="/my-students/:studentId" element={<MentorLayout><GlassMyStudentsPage /></MentorLayout>} />
+        <Route path="/pending-progress" element={<MentorLayout><GlassPendingProgressPage /></MentorLayout>} />
+        <Route path="/pending-progress/:progressId" element={<MentorLayout><GlassPendingProgressPage /></MentorLayout>} />
+        <Route path="/messages" element={<MentorLayout><GlassMessagesPage /></MentorLayout>} />
+        <Route path="/mentor-profile" element={<MentorLayout><GlassMentorProfilePage /></MentorLayout>} />
       </Route>
     </Routes>
   );

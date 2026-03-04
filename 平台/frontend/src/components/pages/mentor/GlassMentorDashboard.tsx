@@ -106,12 +106,12 @@ const GlassMentorDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center particle-bg">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-transparent border-t-purple-500 border-r-cyan-500 rounded-full mx-auto mb-6"
+            className="w-16 h-16 border-4 border-transparent border-t-blue-500 border-r-cyan-500 rounded-full mx-auto mb-6"
           />
           <p className="text-white/80 text-lg font-rajdhani tracking-wider">LOADING</p>
         </div>
@@ -120,7 +120,7 @@ const GlassMentorDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8 px-4 particle-bg">
+    <div className="py-8 px-4 particle-bg">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -129,12 +129,12 @@ const GlassMentorDashboard: React.FC = () => {
           className="mb-10"
         >
           <div className="glass-strong rounded-3xl p-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
             
             <div className="relative z-10">
               <h1 className="text-4xl md:text-5xl font-bold font-orbitron text-white mb-3">
-                <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-pink-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-sky-400 bg-clip-text text-transparent">
                   导师工作台
                 </span>
               </h1>
@@ -158,13 +158,13 @@ const GlassMentorDashboard: React.FC = () => {
                 variants={statCardVariants}
                 className="glass rounded-3xl p-8 h-full relative overflow-hidden group"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-6">
                     <motion.div
                       animate={{ rotate: [0, 10, -10, 0] }}
                       transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                      className="w-16 h-16 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30"
+                      className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30"
                     >
                       <FaUsers className="text-2xl text-white" />
                     </motion.div>
@@ -287,12 +287,12 @@ const GlassMentorDashboard: React.FC = () => {
             className="lg:col-span-2 space-y-8"
           >
             <motion.div className="glass-strong rounded-3xl p-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
               
               <div className="relative z-10">
                 <div className="flex justify-between items-center mb-8">
                   <h2 className="text-2xl font-bold font-orbitron text-white flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
                       <FaUserGraduate className="text-lg text-white" />
                     </div>
                     学生列表
@@ -329,7 +329,7 @@ const GlassMentorDashboard: React.FC = () => {
                             <motion.div
                               whileHover={{ rotate: 360 }}
                               transition={{ duration: 0.6 }}
-                              className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-500/25"
+                              className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-500/25"
                             >
                               {student.name?.charAt(0) || 'S'}
                             </motion.div>
@@ -412,12 +412,12 @@ const GlassMentorDashboard: React.FC = () => {
             className="space-y-8"
           >
             <motion.div className="glass-strong rounded-3xl p-8 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl -translate-y-1/2 -translate-x-1/2" />
+              <div className="absolute top-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 -translate-x-1/2" />
               
               <div className="relative z-10">
                 <div className="flex justify-between items-center mb-8">
                   <h2 className="text-2xl font-bold font-orbitron text-white flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
                       <FaCalendarAlt className="text-lg text-white" />
                     </div>
                     即将到来
@@ -515,13 +515,13 @@ const GlassMentorDashboard: React.FC = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 80, delay: 0.7 }}
-              className="glass-strong rounded-3xl p-8 relative overflow-hidden bg-gradient-to-br from-purple-500/20 via-cyan-500/10 to-pink-500/20"
+              className="glass-strong rounded-3xl p-8 relative overflow-hidden bg-gradient-to-br from-blue-500/20 via-cyan-500/10 to-sky-500/20"
             >
               <div className="relative z-10 text-center">
                 <motion.div
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                  className="w-20 h-20 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/40"
+                  className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/40"
                 >
                   <FaRocket className="text-3xl text-white" />
                 </motion.div>
@@ -531,7 +531,7 @@ const GlassMentorDashboard: React.FC = () => {
                 </p>
                 <Link
                   to="/my-students"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 to-cyan-500 text-white px-8 py-4 rounded-2xl font-semibold hover:shadow-lg hover:shadow-purple-500/40 transition-all duration-300"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-8 py-4 rounded-2xl font-semibold hover:shadow-lg hover:shadow-blue-500/40 transition-all duration-300"
                 >
                   开始指导 <FaArrowRight />
                 </Link>

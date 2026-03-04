@@ -87,13 +87,13 @@ const EnhancedStudentHub: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex gradient-bg particle-bg">
       <Sidebar type="student" />
       
-      <div className="flex-1 ml-64 flex flex-col gradient-bg particle-bg">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header title="学生中心" subtitle="欢迎回来，探索您的学术之旅" />
         
-        <div className="flex-1 container mx-auto px-6 py-8">
+        <main className="flex-1 container mx-auto px-6 py-8">
           {loading || studentLoading ? (
             <div className="flex items-center justify-center py-20">
               <div className="flex flex-col items-center gap-4">
@@ -522,7 +522,7 @@ const EnhancedStudentHub: React.FC = () => {
               )}
             </div>
           )}
-        </div>
+        </main>
 
         <Footer />
       </div>

@@ -111,13 +111,13 @@ const DashboardPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex gradient-bg particle-bg">
       <Sidebar type="student" />
       
-      <div className="flex-1 ml-64 flex flex-col gradient-bg particle-bg">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header title="个人工作台" subtitle="高效管理您的学术日程" />
         
-        <div className="flex-1 container mx-auto px-6 py-8">
+        <main className="flex-1 container mx-auto px-6 py-8">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="flex flex-col items-center gap-4">
@@ -347,7 +347,7 @@ const DashboardPage: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
+        </main>
 
         {showAddTodoModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
-  FaUser, FaUniversity, FaGraduationCap, FaBriefcase, 
+  FaUser, FaUserGraduate, FaUniversity, FaGraduationCap, FaBriefcase, 
   FaPhone, FaEnvelope, FaMapMarkerAlt, FaFlask, 
   FaAward, FaEdit, FaSave, FaChevronRight
 } from 'react-icons/fa';
@@ -57,7 +57,7 @@ const GlassMentorProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 particle-bg py-8">
+    <div className="particle-bg py-8">
       <div className="max-w-6xl mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -76,7 +76,7 @@ const GlassMentorProfilePage: React.FC = () => {
             className={`px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 transition-all duration-300 ${
               isEditing
                 ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg hover:shadow-green-500/40'
-                : 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:shadow-lg hover:shadow-purple-500/40'
+                : 'bg-gradient-to-r from-blue-600 to-sky-500 text-white hover:shadow-lg hover:shadow-blue-500/40'
             }`}
           >
             {isEditing ? <FaSave /> : <FaEdit />}
@@ -97,7 +97,7 @@ const GlassMentorProfilePage: React.FC = () => {
             <div className="flex items-center mb-8 pb-8 border-b border-white/10">
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
-                className="w-28 h-28 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-3xl flex items-center justify-center text-white text-5xl font-bold mr-8 shadow-lg shadow-purple-500/30"
+                className="w-28 h-28 bg-gradient-to-br from-blue-600 to-sky-500 rounded-3xl flex items-center justify-center text-white text-5xl font-bold mr-8 shadow-lg shadow-blue-500/30"
               >
                 {mentorInfo.name?.charAt(0) || 'W'}
               </motion.div>
@@ -107,7 +107,7 @@ const GlassMentorProfilePage: React.FC = () => {
                     type="text"
                     value={mentorInfo.name}
                     onChange={(e) => setMentorInfo({ ...mentorInfo, name: e.target.value })}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-xl text-white text-2xl font-bold font-orbitron focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-xl text-white text-2xl font-bold font-orbitron focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                   />
                 ) : (
                   <h2 className="text-3xl font-bold font-orbitron text-white mb-2">{mentorInfo.name}</h2>
@@ -118,7 +118,7 @@ const GlassMentorProfilePage: React.FC = () => {
                       type="text"
                       value={mentorInfo.title}
                       onChange={(e) => setMentorInfo({ ...mentorInfo, title: e.target.value })}
-                      className="px-3 py-1 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                      className="px-3 py-1 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     />
                   ) : (
                     <span>{mentorInfo.title}</span>
@@ -129,7 +129,7 @@ const GlassMentorProfilePage: React.FC = () => {
                       type="text"
                       value={mentorInfo.department}
                       onChange={(e) => setMentorInfo({ ...mentorInfo, department: e.target.value })}
-                      className="px-3 py-1 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                      className="px-3 py-1 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     />
                   ) : (
                     <span>{mentorInfo.department}</span>
@@ -156,7 +156,7 @@ const GlassMentorProfilePage: React.FC = () => {
                           type="text"
                           value={mentorInfo.name}
                           onChange={(e) => setMentorInfo({ ...mentorInfo, name: e.target.value })}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
                         <p className="text-white">{mentorInfo.name}</p>
@@ -169,7 +169,7 @@ const GlassMentorProfilePage: React.FC = () => {
                           type="text"
                           value={mentorInfo.title}
                           onChange={(e) => setMentorInfo({ ...mentorInfo, title: e.target.value })}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
                         <p className="text-white">{mentorInfo.title}</p>
@@ -182,7 +182,7 @@ const GlassMentorProfilePage: React.FC = () => {
                           type="text"
                           value={mentorInfo.department}
                           onChange={(e) => setMentorInfo({ ...mentorInfo, department: e.target.value })}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
                         <p className="text-white">{mentorInfo.department}</p>
@@ -196,7 +196,7 @@ const GlassMentorProfilePage: React.FC = () => {
                   className="glass rounded-2xl p-6"
                 >
                   <h3 className="font-semibold font-orbitron text-white mb-6 flex items-center gap-3">
-                    <FaEnvelope className="text-cyan-400" />
+                    <FaEnvelope className="text-sky-400" />
                     联系方式
                   </h3>
                   <div className="space-y-4">
@@ -213,7 +213,7 @@ const GlassMentorProfilePage: React.FC = () => {
                             ...mentorInfo, 
                             contactInfo: { ...mentorInfo.contactInfo, phone: e.target.value } 
                           })}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
                         <p className="text-white">{mentorInfo.contactInfo.phone}</p>
@@ -232,7 +232,7 @@ const GlassMentorProfilePage: React.FC = () => {
                             ...mentorInfo, 
                             contactInfo: { ...mentorInfo.contactInfo, email: e.target.value } 
                           })}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
                         <p className="text-white">{mentorInfo.contactInfo.email}</p>
@@ -251,7 +251,7 @@ const GlassMentorProfilePage: React.FC = () => {
                             ...mentorInfo, 
                             contactInfo: { ...mentorInfo.contactInfo, office: e.target.value } 
                           })}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
                         <p className="text-white">{mentorInfo.contactInfo.office}</p>
@@ -278,7 +278,7 @@ const GlassMentorProfilePage: React.FC = () => {
                         ...mentorInfo, 
                         researchArea: e.target.value.split(',').map(item => item.trim()) 
                       })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                       placeholder="用逗号分隔多个研究方向"
                     />
                   ) : (
@@ -289,7 +289,7 @@ const GlassMentorProfilePage: React.FC = () => {
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: index * 0.1 }}
-                          className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 rounded-full text-white/80 text-sm"
+                          className="px-4 py-2 bg-gradient-to-r from-blue-600/20 to-sky-500/20 border border-blue-500/30 rounded-full text-white/80 text-sm"
                         >
                           {area}
                         </motion.span>
@@ -303,14 +303,14 @@ const GlassMentorProfilePage: React.FC = () => {
                   className="glass rounded-2xl p-6"
                 >
                   <h3 className="font-semibold font-orbitron text-white mb-6 flex items-center gap-3">
-                    <FaGraduationCap className="text-cyan-400" />
+                    <FaGraduationCap className="text-sky-400" />
                     教育背景
                   </h3>
                   {isEditing ? (
                     <textarea
                       value={mentorInfo.educationBackground}
                       onChange={(e) => setMentorInfo({ ...mentorInfo, educationBackground: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                       rows={3}
                     />
                   ) : (
@@ -330,7 +330,7 @@ const GlassMentorProfilePage: React.FC = () => {
                     <textarea
                       value={mentorInfo.workExperience}
                       onChange={(e) => setMentorInfo({ ...mentorInfo, workExperience: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                       rows={3}
                     />
                   ) : (
@@ -375,7 +375,7 @@ const GlassMentorProfilePage: React.FC = () => {
                 className="glass rounded-2xl p-6"
               >
                 <h3 className="font-semibold font-orbitron text-white mb-6 flex items-center gap-3">
-                  <FaAward className="text-cyan-400" />
+                  <FaAward className="text-sky-400" />
                   主要成果
                 </h3>
                 <ul className="space-y-3">
@@ -387,7 +387,7 @@ const GlassMentorProfilePage: React.FC = () => {
                       transition={{ delay: index * 0.1 }}
                       className="flex items-center text-white/80"
                     >
-                      <FaChevronRight className="mr-3 text-cyan-400 text-sm" />
+                      <FaChevronRight className="mr-3 text-sky-400 text-sm" />
                       {achievement}
                     </motion.li>
                   ))}

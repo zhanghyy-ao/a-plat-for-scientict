@@ -131,16 +131,16 @@ const ProgressPage: React.FC = () => {
 
   if (isLoading && viewMode === 'list') {
     return (
-      <div className="min-h-screen flex">
+      <div className="min-h-screen flex gradient-bg particle-bg">
         <Sidebar type="student" />
-        <div className="flex-1 ml-64 flex flex-col gradient-bg particle-bg">
+        <div className="flex-1 flex flex-col min-h-screen">
           <Header title="课题进度" subtitle="管理您的课题进度" />
-          <div className="flex-1 flex items-center justify-center">
+          <main className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-neon-purple border-t-transparent"></div>
               <p className="text-gray-400 animate-pulse">加载中...</p>
             </div>
-          </div>
+          </main>
         </div>
       </div>
     );
@@ -148,11 +148,11 @@ const ProgressPage: React.FC = () => {
 
   if (viewMode === 'detail' && selectedProgress) {
     return (
-      <div className="min-h-screen flex">
+      <div className="min-h-screen flex gradient-bg particle-bg">
         <Sidebar type="student" />
-        <div className="flex-1 ml-64 flex flex-col gradient-bg particle-bg">
+        <div className="flex-1 flex flex-col min-h-screen">
           <Header title="进度详情" subtitle="查看课题进度详情" />
-          <div className="flex-1 container mx-auto px-6 py-8">
+          <main className="flex-1 container mx-auto px-6 py-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -277,20 +277,20 @@ const ProgressPage: React.FC = () => {
                 </motion.div>
               )}
             </motion.div>
-          </div>
-          <Footer />
-        </div>
+        </main>
+        <Footer />
       </div>
-    );
+    </div>
+  );
   }
 
   if (viewMode === 'submit' || showSubmitForm) {
     return (
-      <div className="min-h-screen flex">
+      <div className="min-h-screen flex gradient-bg particle-bg">
         <Sidebar type="student" />
-        <div className="flex-1 ml-64 flex flex-col gradient-bg particle-bg">
+        <div className="flex-1 flex flex-col min-h-screen">
           <Header title="提交进度" subtitle="提交新的课题进度汇报" />
-          <div className="flex-1 container mx-auto px-6 py-8">
+          <main className="flex-1 container mx-auto px-6 py-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -409,19 +409,19 @@ const ProgressPage: React.FC = () => {
                 </div>
               </Card>
             </motion.div>
-          </div>
-          <Footer />
-        </div>
+        </main>
+        <Footer />
       </div>
-    );
+    </div>
+  );
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex gradient-bg particle-bg">
       <Sidebar type="student" />
-      <div className="flex-1 ml-64 flex flex-col gradient-bg particle-bg">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header title="课题进度" subtitle="管理您的课题进度" />
-        <div className="flex-1 container mx-auto px-6 py-8">
+        <main className="flex-1 container mx-auto px-6 py-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -518,7 +518,7 @@ const ProgressPage: React.FC = () => {
               </div>
             )}
           </motion.div>
-        </div>
+        </main>
         <Footer />
       </div>
     </div>
