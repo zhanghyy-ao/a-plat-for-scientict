@@ -10,8 +10,8 @@ import Button from '../../common/Button';
 import Card from '../../common/Card';
 import { 
   FiPlus, FiCalendar, FiArrowLeft, FiEye, 
-  FiCheck, FiClock, FiEdit, FiTrendingUp,
-  FiChevronRight, FiX
+  FiCheck, FiClock,
+  FiChevronRight
 } from 'react-icons/fi';
 
 const ProgressPage: React.FC = () => {

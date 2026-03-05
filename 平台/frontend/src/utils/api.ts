@@ -9,8 +9,15 @@ export const setAuthToken = (token: string | null) => {
 async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
   };
+
+  if (options.headers) {
+    Object.entries(options.headers).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        headers[key] = value;
+      }
+    });
+  }
 
   if (authToken) {
     headers['Authorization'] = `Bearer ${authToken}`;
@@ -282,6 +289,15 @@ export const taskApi = {
       body: JSON.stringify(data),
     }),
   getTask: (id: string) => request<any>(`/tasks/${id}`),
+  updateTask: (id: string, data: any) =>
+    request<any>(`/tasks/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteTask: (id: string) =>
+    request<any>(`/tasks/${id}`, {
+      method: 'DELETE',
+    }),
   updateAssignment: (taskId: string, assignmentId: string, data: any) =>
     request<any>(`/tasks/${taskId}/assignments/${assignmentId}`, {
       method: 'PUT',
@@ -302,16 +318,30 @@ export const appointmentApi = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+  deleteAppointment: (id: string) =>
+    request<any>(`/appointments/${id}`, {
+      method: 'DELETE',
+    }),
 };
 
 export const notificationApi = {
   getNotifications: () => request<any[]>('/notifications'),
+  getNotification: (id: string) => request<any>(`/notifications/${id}`),
+  markAsRead: (id: string) =>
+    request<any>(`/notifications/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ is_read: true }),
+    }),
   updateNotification: (id: string, data: any) =>
     request<any>(`/notifications/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-  markAllRead: () =>
+  deleteNotification: (id: string) =>
+    request<any>(`/notifications/${id}`, {
+      method: 'DELETE',
+    }),
+  markAllAsRead: () =>
     request<any>('/notifications/mark-all-read', {
       method: 'PUT',
     }),

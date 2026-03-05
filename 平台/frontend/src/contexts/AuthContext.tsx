@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { authApi, setAuthToken } from '../utils/api';
 
 interface User {
@@ -57,6 +57,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string) => {
     try {
       const response = await authApi.login(username, password);
+      
+      // 验证响应格式
+      if (!response || !response.token || !response.user) {
+        throw new Error('登录响应格式错误');
+      }
+      
       const { token: newToken, user: newUser } = response;
 
       setToken(newToken);
@@ -67,6 +73,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(newUser));
     } catch (error) {
       console.error('Login failed:', error);
+      // 清理状态
+      setToken(null);
+      setUser(null);
+      setAuthToken(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       throw error;
     }
   };

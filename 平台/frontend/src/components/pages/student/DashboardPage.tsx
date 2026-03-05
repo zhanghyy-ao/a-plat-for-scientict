@@ -7,13 +7,12 @@ import Sidebar from '../../layout/Sidebar';
 import Button from '../../common/Button';
 import Card from '../../common/Card';
 import { useAuth } from '../../../contexts/AuthContext';
-import { todoApi, noteApi, resourceApi, bookingApi, progressApi } from '../../../utils/api';
+import { todoApi, noteApi, resourceApi, progressApi } from '../../../utils/api';
 import { 
   FiCheckCircle, FiClock, FiStar, FiCalendar, 
   FiFileText, FiBookOpen, FiEdit3, FiPlus, 
-  FiTrendingUp, FiMessageSquare, FiUsers,
-  FiAlertCircle, FiCheckSquare, FiSquare,
-  FiChevronRight, FiMoreHorizontal
+  FiAlertCircle, FiCheckSquare,
+  FiChevronRight, FiMoreHorizontal, FiTrendingUp
 } from 'react-icons/fi';
 
 const DashboardPage: React.FC = () => {
@@ -30,6 +29,7 @@ const DashboardPage: React.FC = () => {
     priority: 'medium',
     due_date: ''
   });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -57,8 +57,22 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleAddTodo = async () => {
+    // 表单验证
+    if (!newTodo.title || newTodo.title.trim() === '') {
+      setError('请输入待办事项标题');
+      return;
+    }
+    
+    setError(null);
+    
     try {
-      await todoApi.createTodo(newTodo);
+      const dataToSend = {
+        ...newTodo,
+        title: newTodo.title.trim(),
+        description: newTodo.description?.trim() || ''
+      };
+      
+      await todoApi.createTodo(dataToSend);
       setShowAddTodoModal(false);
       setNewTodo({
         title: '',
@@ -67,8 +81,9 @@ const DashboardPage: React.FC = () => {
         due_date: ''
       });
       loadDashboardData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add todo:', error);
+      setError(error.message || '保存失败，请重试');
     }
   };
 
@@ -360,19 +375,30 @@ const DashboardPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold text-white font-orbitron">添加待办事项</h3>
                   <button
-                    onClick={() => setShowAddTodoModal(false)}
+                    onClick={() => {
+                      setShowAddTodoModal(false);
+                      setError(null);
+                    }}
                     className="text-gray-400 hover:text-white transition-colors"
                   >
                     <FiMoreHorizontal className="w-6 h-6 rotate-45" />
                   </button>
                 </div>
+                {error && (
+                  <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 text-sm mb-4">
+                    {error}
+                  </div>
+                )}
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm text-gray-400 mb-2">标题 *</label>
                     <input
                       type="text"
                       value={newTodo.title}
-                      onChange={(e) => setNewTodo({...newTodo, title: e.target.value})}
+                      onChange={(e) => {
+                        setNewTodo({...newTodo, title: e.target.value});
+                        if (error) setError(null);
+                      }}
                       className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
                       placeholder="请输入待办事项标题"
                     />
@@ -414,7 +440,10 @@ const DashboardPage: React.FC = () => {
                 <div className="flex gap-3 mt-6 justify-end">
                   <Button
                     variant="outline"
-                    onClick={() => setShowAddTodoModal(false)}
+                    onClick={() => {
+                      setShowAddTodoModal(false);
+                      setError(null);
+                    }}
                     className="border-white/20"
                   >
                     取消

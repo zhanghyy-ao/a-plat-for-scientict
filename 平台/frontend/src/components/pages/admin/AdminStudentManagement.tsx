@@ -114,7 +114,7 @@ const AdminStudentManagement: React.FC = () => {
   );
 
   const springConfig = {
-    type: 'spring',
+    type: 'spring' as const,
     stiffness: 300,
     damping: 20
   };

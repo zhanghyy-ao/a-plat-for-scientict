@@ -4,7 +4,7 @@ import Footer from './Footer';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   FaHome, FaUsers, FaClipboardList, FaComments, FaUserCog,
-  FaChevronRight
+  FaTasks, FaCalendarAlt, FaBell, FaChevronRight
 } from 'react-icons/fa';
 
 interface MentorLayoutProps {
@@ -18,7 +18,10 @@ const MentorLayout: React.FC<MentorLayoutProps> = ({ children }) => {
     { path: '/', name: '工作台', icon: FaHome },
     { path: '/my-students', name: '我的学生', icon: FaUsers },
     { path: '/pending-progress', name: '待审进度', icon: FaClipboardList },
+    { path: '/tasks', name: '任务管理', icon: FaTasks },
+    { path: '/appointments', name: '预约管理', icon: FaCalendarAlt },
     { path: '/messages', name: '消息中心', icon: FaComments },
+    { path: '/notifications', name: '通知中心', icon: FaBell },
     { path: '/mentor-profile', name: '个人资料', icon: FaUserCog },
   ];
   

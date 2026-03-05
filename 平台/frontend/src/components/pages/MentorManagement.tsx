@@ -277,7 +277,7 @@ const MentorManagement: React.FC = () => {
     setSelectedMentor(null);
   };
 
-  const handleDeleteMentor = (id: string) => {
+  const handleDeleteMentor = (_id: string) => {
     if (confirm('确定要删除这位导师吗？')) {
       alert('删除导师功能（需对接后端API）');
     }

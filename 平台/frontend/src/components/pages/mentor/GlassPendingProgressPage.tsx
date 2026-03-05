@@ -122,7 +122,7 @@ const GlassPendingProgressPage: React.FC = () => {
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 100,
         damping: 15
       }
@@ -151,7 +151,7 @@ const GlassPendingProgressPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ type: "spring", stiffness: 80 }}
+            transition={{ type: "spring" as const, stiffness: 80 }}
             className="mb-6"
           >
             <button
@@ -166,7 +166,7 @@ const GlassPendingProgressPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 80, delay: 0.1 }}
+            transition={{ type: "spring" as const, stiffness: 80, delay: 0.1 }}
             className="glass-strong rounded-3xl p-8 mb-8"
           >
             <div className="flex items-center mb-8 pb-8 border-b border-white/10">
@@ -235,7 +235,7 @@ const GlassPendingProgressPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 80, delay: 0.2 }}
+            transition={{ type: "spring" as const, stiffness: 80, delay: 0.2 }}
             className="glass-strong rounded-3xl p-8"
           >
             <h2 className="text-2xl font-bold font-orbitron text-white mb-8 flex items-center gap-3">
@@ -330,7 +330,7 @@ const GlassPendingProgressPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 80 }}
+          transition={{ type: "spring" as const, stiffness: 80 }}
           className="mb-8"
         >
           <h1 className="text-4xl font-bold font-orbitron text-white mb-3">待审进度</h1>
@@ -341,7 +341,7 @@ const GlassPendingProgressPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 80 }}
+            transition={{ type: "spring" as const, stiffness: 80 }}
             className="glass-strong rounded-3xl p-16 text-center"
           >
             <FaCheckCircle className="w-20 h-20 text-green-400/30 mx-auto mb-6" />

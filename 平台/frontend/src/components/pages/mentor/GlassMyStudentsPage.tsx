@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../../contexts/AuthContext';
-import { myApi, studentApi } from '../../../utils/api';
+import { myApi } from '../../../utils/api';
 import { 
   FaUserGraduate, FaSearch, FaArrowLeft, FaCalendarAlt, 
-  FaUser, FaBook, FaFlask, FaEnvelope, FaComments
+  FaUser, FaBook, FaFlask, FaComments
 } from 'react-icons/fa';
 
 const GlassMyStudentsPage: React.FC = () => {
@@ -100,7 +100,7 @@ const GlassMyStudentsPage: React.FC = () => {
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 100,
         damping: 15
       }
@@ -129,7 +129,7 @@ const GlassMyStudentsPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ type: "spring", stiffness: 80 }}
+            transition={{ type: "spring" as const, stiffness: 80 }}
             className="mb-6"
           >
             <button
@@ -144,7 +144,7 @@ const GlassMyStudentsPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 80, delay: 0.1 }}
+            transition={{ type: "spring" as const, stiffness: 80, delay: 0.1 }}
             className="glass-strong rounded-3xl p-8 mb-8"
           >
             <div className="flex items-center mb-8">
@@ -209,7 +209,7 @@ const GlassMyStudentsPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 80, delay: 0.2 }}
+            transition={{ type: "spring" as const, stiffness: 80, delay: 0.2 }}
             className="glass-strong rounded-3xl p-8"
           >
             <h2 className="text-2xl font-bold font-orbitron text-white mb-8 flex items-center gap-3">
@@ -298,7 +298,7 @@ const GlassMyStudentsPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 80 }}
+          transition={{ type: "spring" as const, stiffness: 80 }}
           className="mb-8"
         >
           <h1 className="text-4xl font-bold font-orbitron text-white mb-3">我的学生</h1>
@@ -308,7 +308,7 @@ const GlassMyStudentsPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 80, delay: 0.1 }}
+          transition={{ type: "spring" as const, stiffness: 80, delay: 0.1 }}
           className="mb-8"
         >
           <div className="relative">
@@ -327,7 +327,7 @@ const GlassMyStudentsPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 80 }}
+            transition={{ type: "spring" as const, stiffness: 80 }}
             className="glass-strong rounded-3xl p-16 text-center"
           >
             <FaUserGraduate className="w-20 h-20 text-white/20 mx-auto mb-6" />

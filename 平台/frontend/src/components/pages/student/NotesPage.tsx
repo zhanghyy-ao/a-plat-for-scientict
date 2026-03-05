@@ -9,8 +9,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { noteApi } from '../../../utils/api';
 import { 
   FiEdit3, FiPlus, FiSearch, FiCalendar, 
-  FiTag, FiTrash2, FiSave, FiX,
-  FiEye, FiLock, FiGlobe
+  FiTrash2, FiSave, FiX,
+  FiLock, FiGlobe
 } from 'react-icons/fi';
 
 const NotesPage: React.FC = () => {
@@ -26,6 +26,7 @@ const NotesPage: React.FC = () => {
     tags: '',
     is_private: true
   });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadNotes();
@@ -44,11 +45,26 @@ const NotesPage: React.FC = () => {
   };
 
   const handleSaveNote = async () => {
+    // 表单验证
+    if (!noteForm.title || noteForm.title.trim() === '') {
+      setError('请输入笔记标题');
+      return;
+    }
+    
+    setError(null);
+    
     try {
+      const dataToSend = {
+        ...noteForm,
+        title: noteForm.title.trim(),
+        content: noteForm.content?.trim() || '',
+        tags: noteForm.tags?.trim() || ''
+      };
+      
       if (editingNote) {
-        await noteApi.updateNote(editingNote.id, noteForm);
+        await noteApi.updateNote(editingNote.id, dataToSend);
       } else {
-        await noteApi.createNote(noteForm);
+        await noteApi.createNote(dataToSend);
       }
       setShowAddModal(false);
       setEditingNote(null);
@@ -59,8 +75,9 @@ const NotesPage: React.FC = () => {
         is_private: true
       });
       loadNotes();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save note:', error);
+      setError(error.message || '保存失败，请重试');
     }
   };
 
@@ -251,19 +268,28 @@ const NotesPage: React.FC = () => {
                     onClick={() => {
                       setShowAddModal(false);
                       setEditingNote(null);
+                      setError(null);
                     }}
                     className="text-gray-400 hover:text-white transition-colors"
                   >
                     <FiX className="w-6 h-6" />
                   </button>
                 </div>
+                {error && (
+                  <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm text-gray-400 mb-2">标题 *</label>
                     <input
                       type="text"
                       value={noteForm.title}
-                      onChange={(e) => setNoteForm({...noteForm, title: e.target.value})}
+                      onChange={(e) => {
+                        setNoteForm({...noteForm, title: e.target.value});
+                        if (error) setError(null);
+                      }}
                       className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-neon-cyan/50"
                       placeholder="请输入笔记标题"
                     />
@@ -305,6 +331,7 @@ const NotesPage: React.FC = () => {
                     onClick={() => {
                       setShowAddModal(false);
                       setEditingNote(null);
+                      setError(null);
                     }}
                     className="border-white/20"
                   >

@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../../contexts/AuthContext';
 import { 
-  FaUser, FaUserGraduate, FaUniversity, FaGraduationCap, FaBriefcase, 
+  FaUserGraduate, FaUniversity, FaGraduationCap, FaBriefcase, 
   FaPhone, FaEnvelope, FaMapMarkerAlt, FaFlask, 
   FaAward, FaEdit, FaSave, FaChevronRight
 } from 'react-icons/fa';
 
 const GlassMentorProfilePage: React.FC = () => {
-  const { user } = useAuth();
   const [mentorInfo, setMentorInfo] = useState({
     id: '1',
     name: '王教授',
@@ -49,7 +47,7 @@ const GlassMentorProfilePage: React.FC = () => {
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 100,
         damping: 15
       }

@@ -4,7 +4,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { myApi, messageApi } from '../../../utils/api';
 import { 
   FaPaperPlane, FaUserCircle, FaSearch, FaInbox, 
-  FaPaperclip, FaArrowLeft, FaCheck, FaCheckDouble
+  FaPaperclip, FaCheck, FaCheckDouble
 } from 'react-icons/fa';
 
 const GlassMessagesPage: React.FC = () => {
@@ -120,7 +120,7 @@ const GlassMessagesPage: React.FC = () => {
       opacity: 1,
       x: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 100,
         damping: 15
       }

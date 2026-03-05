@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../common/Button';
-import { useAuth } from '../../../contexts/AuthContext';
 
 const MentorProfilePage: React.FC = () => {
-  const { user } = useAuth();
   const [mentorInfo, setMentorInfo] = useState({
     id: '1',
     name: '王教授',

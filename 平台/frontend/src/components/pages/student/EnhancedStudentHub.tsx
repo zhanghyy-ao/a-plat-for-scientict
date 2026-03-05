@@ -7,13 +7,13 @@ import Sidebar from '../../layout/Sidebar';
 import Button from '../../common/Button';
 import Card from '../../common/Card';
 import { useAuth } from '../../../contexts/AuthContext';
-import { studentApi, mentorApi, myApi, progressApi } from '../../../utils/api';
+import { mentorApi, myApi } from '../../../utils/api';
 import { 
-  FiUser, FiBook, FiAward, FiMail, FiEdit, 
-  FiCalendar, FiChevronRight, FiFile, FiPlus, 
-  FiCheck, FiClock, FiTrendingUp, FiStar, 
-  FiMessageSquare, FiActivity, FiArrowUpRight,
-  FiLayout, FiFileText, FiEdit3
+  FiUser, FiBook, FiAward, FiMail, 
+  FiCalendar, FiPlus, 
+  FiCheck, FiClock, FiStar, 
+  FiActivity, FiArrowUpRight,
+  FiLayout, FiFileText, FiEdit3, FiTrendingUp
 } from 'react-icons/fi';
 
 const EnhancedStudentHub: React.FC = () => {
@@ -81,7 +81,7 @@ const EnhancedStudentHub: React.FC = () => {
   ];
 
   const springConfig = {
-    type: 'spring',
+    type: 'spring' as const,
     stiffness: 300,
     damping: 20
   };

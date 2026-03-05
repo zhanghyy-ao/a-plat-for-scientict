@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../common/Button';
-import { useAuth } from '../../../contexts/AuthContext';
 
 const StudentProfilePage: React.FC = () => {
-  const { user } = useAuth();
   const [studentInfo, setStudentInfo] = useState({
     id: '1',
     name: '张三',

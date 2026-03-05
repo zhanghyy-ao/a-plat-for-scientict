@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../layout/Header';
 import Footer from '../layout/Footer';
 import Button from '../common/Button';
-import { useAuth } from '../../contexts/AuthContext';
 
 const ContentManagement: React.FC = () => {
-  const { user } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -9,8 +9,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { resourceApi } from '../../../utils/api';
 import { 
   FiFileText, FiBookOpen, FiVideo, FiLink, 
-  FiSearch, FiFilter, FiPlus, FiEye,
-  FiDownload, FiTag, FiCalendar, FiStar
+  FiSearch, FiPlus, FiEye,
+  FiDownload, FiCalendar, FiStar
 } from 'react-icons/fi';
 
 const ResourcesPage: React.FC = () => {
@@ -30,6 +30,7 @@ const ResourcesPage: React.FC = () => {
     tags: '',
     is_public: true
   });
+  const [error, setError] = useState<string | null>(null);
 
   const resourceTypes = [
     { value: 'all', label: '全部类型' },
@@ -67,8 +68,29 @@ const ResourcesPage: React.FC = () => {
   };
 
   const handleAddResource = async () => {
+    // 表单验证
+    if (!newResource.title || newResource.title.trim() === '') {
+      setError('请输入资源标题');
+      return;
+    }
+    if (!newResource.type) {
+      setError('请选择资源类型');
+      return;
+    }
+    
+    setError(null);
+    
     try {
-      await resourceApi.createResource(newResource);
+      const dataToSend = {
+        ...newResource,
+        title: newResource.title.trim(),
+        description: newResource.description?.trim() || '',
+        category: newResource.category?.trim() || '',
+        url: newResource.url?.trim() || '',
+        tags: newResource.tags?.trim() || ''
+      };
+      
+      await resourceApi.createResource(dataToSend);
       setShowAddModal(false);
       setNewResource({
         title: '',
@@ -80,8 +102,9 @@ const ResourcesPage: React.FC = () => {
         is_public: true
       });
       loadResources();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add resource:', error);
+      setError(error.message || '保存失败，请重试');
     }
   };
 
@@ -234,15 +257,20 @@ const ResourcesPage: React.FC = () => {
                     
                     <div className="mt-4 flex gap-2">
                       {resource.url && (
-                        <Button size="sm" variant="outline" className="flex-1 border-white/20" as="a" href={resource.url} target="_blank">
+                        <a
+                          href={resource.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-white/20 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-colors"
+                        >
                           <FiLink className="w-4 h-4 mr-2" />
                           访问
-                        </Button>
+                        </a>
                       )}
-                      <Button size="sm" className="flex-1 bg-gradient-to-r from-electric-blue to-neon-cyan border-0">
+                      <button className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-electric-blue to-neon-cyan rounded-xl text-sm font-medium text-white hover:shadow-lg transition-all">
                         <FiStar className="w-4 h-4 mr-2" />
                         收藏
-                      </Button>
+                      </button>
                     </div>
                   </Card>
                 </motion.div>
@@ -278,19 +306,30 @@ const ResourcesPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold text-white font-orbitron">上传学习资源</h3>
                   <button
-                    onClick={() => setShowAddModal(false)}
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setError(null);
+                    }}
                     className="text-gray-400 hover:text-white transition-colors"
                   >
                     <FiPlus className="w-6 h-6 rotate-45" />
                   </button>
                 </div>
+                {error && (
+                  <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 text-sm mb-4">
+                    {error}
+                  </div>
+                )}
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm text-gray-400 mb-2">标题 *</label>
                     <input
                       type="text"
                       value={newResource.title}
-                      onChange={(e) => setNewResource({...newResource, title: e.target.value})}
+                      onChange={(e) => {
+                        setNewResource({...newResource, title: e.target.value});
+                        if (error) setError(null);
+                      }}
                       className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
                       placeholder="请输入资源标题"
                     />
@@ -369,7 +408,10 @@ const ResourcesPage: React.FC = () => {
                 <div className="flex gap-3 mt-6 justify-end">
                   <Button
                     variant="outline"
-                    onClick={() => setShowAddModal(false)}
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setError(null);
+                    }}
                     className="border-white/20"
                   >
                     取消

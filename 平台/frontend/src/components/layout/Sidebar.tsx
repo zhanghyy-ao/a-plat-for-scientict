@@ -2,10 +2,9 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  FiHome, FiUser, FiBook, FiLayout,
+  FiHome, FiBook, FiLayout,
   FiFileText, FiEdit3, FiArrowUpRight,
-  FiUsers, FiMessageSquare, FiClipboard,
-  FiCalendar
+  FiUsers, FiMessageSquare, FiClipboard
 } from 'react-icons/fi';
 
 interface SidebarProps {

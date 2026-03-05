@@ -6,7 +6,6 @@ import AboutPage from './components/pages/AboutPage';
 import AchievementsPage from './components/pages/AchievementsPage';
 import NewsPage from './components/pages/NewsPage';
 import ContactPage from './components/pages/ContactPage';
-import StudentManagement from './components/pages/StudentManagement';
 import MentorManagement from './components/pages/MentorManagement';
 import ContentManagement from './components/pages/ContentManagement';
 import NewsManagement from './components/pages/content/NewsManagement';
@@ -23,11 +22,14 @@ import ProgressPage from './components/pages/student/ProgressPage';
 import EnhancedStudentHub from './components/pages/student/EnhancedStudentHub';
 import StudentProfilePage from './components/pages/student/StudentProfilePage';
 import AdminStudentManagement from './components/pages/admin/AdminStudentManagement';
-import GlassMentorDashboard from './components/pages/mentor/GlassMentorDashboard';
+
 import GlassMyStudentsPage from './components/pages/mentor/GlassMyStudentsPage';
 import GlassPendingProgressPage from './components/pages/mentor/GlassPendingProgressPage';
 import GlassMessagesPage from './components/pages/mentor/GlassMessagesPage';
 import GlassMentorProfilePage from './components/pages/mentor/GlassMentorProfilePage';
+import TaskManagementPage from './components/pages/mentor/TaskManagementPage';
+import AppointmentManagementPage from './components/pages/mentor/AppointmentManagementPage';
+import NotificationPage from './components/pages/mentor/NotificationPage';
 
 const AppContent: React.FC = () => {
   const { login } = useAuth();
@@ -97,6 +99,9 @@ const AppContent: React.FC = () => {
         <Route path="/pending-progress/:progressId" element={<MentorLayout><GlassPendingProgressPage /></MentorLayout>} />
         <Route path="/messages" element={<MentorLayout><GlassMessagesPage /></MentorLayout>} />
         <Route path="/mentor-profile" element={<MentorLayout><GlassMentorProfilePage /></MentorLayout>} />
+        <Route path="/tasks" element={<MentorLayout><TaskManagementPage /></MentorLayout>} />
+        <Route path="/appointments" element={<MentorLayout><AppointmentManagementPage /></MentorLayout>} />
+        <Route path="/notifications" element={<MentorLayout><NotificationPage /></MentorLayout>} />
       </Route>
     </Routes>
   );
