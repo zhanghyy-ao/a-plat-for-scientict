@@ -1,0 +1,194 @@
+name: Deploy to Multiple Environments
+
+on:
+  push:
+    branches: [main, staging, beta, v2.0-dev]
+  pull_request:
+    branches: [main, staging, beta, v2.0-dev]
+
+jobs:
+  # 构建任务
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 构建前端
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+        env:
+          VITE_API_URL: ${{ secrets.API_URL }}
+
+      # 准备后端
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      # 上传构建产物
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist
+
+      - name: Upload backend
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-files
+          path: backend/
+
+  # 部署到测试版 (beta)
+  deploy-beta:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/beta'
+    environment:
+      name: beta
+      url: https://beta.your-domain.com
+
+    steps:
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend-dist
+
+      - name: Download backend
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-files
+          path: backend
+
+      - name: Deploy to Beta Server
+        run: |
+          echo "Deploying to BETA environment..."
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          # 这里添加你的部署脚本
+          # 例如：rsync, scp, 或者调用部署 API
+
+      - name: Notify deployment
+        run: |
+          echo "Beta deployment completed!"
+          echo "Environment: https://beta.your-domain.com"
+
+  # 部署到体验服 (staging)
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging'
+    environment:
+      name: staging
+      url: https://staging.your-domain.com
+
+    steps:
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend-dist
+
+      - name: Download backend
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-files
+          path: backend
+
+      - name: Deploy to Staging Server
+        run: |
+          echo "Deploying to STAGING environment..."
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+
+      - name: Notify deployment
+        run: |
+          echo "Staging deployment completed!"
+          echo "Environment: https://staging.your-domain.com"
+
+  # 部署到正式服 (main)
+  deploy-production:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://your-domain.com
+
+    steps:
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend-dist
+
+      - name: Download backend
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-files
+          path: backend
+
+      - name: Deploy to Production Server
+        run: |
+          echo "Deploying to PRODUCTION environment..."
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          # 生产环境部署需要更严格的验证
+
+      - name: Notify deployment
+        run: |
+          echo "Production deployment completed!"
+          echo "Environment: https://your-domain.com"
+
+  # 部署到 2.0 开发环境
+  deploy-v2-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/v2.0-dev'
+    environment:
+      name: v2.0-dev
+      url: https://v2-dev.your-domain.com
+
+    steps:
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend-dist
+
+      - name: Download backend
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-files
+          path: backend
+
+      - name: Deploy to v2.0 Dev Server
+        run: |
+          echo "Deploying to v2.0 DEV environment..."
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+
+      - name: Notify deployment
+        run: |
+          echo "v2.0 Dev deployment completed!"
+          echo "Environment: https://v2-dev.your-domain.com"
