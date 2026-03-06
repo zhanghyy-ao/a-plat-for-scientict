@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   FiHome, FiBook, FiLayout,
   FiFileText, FiEdit3, FiArrowUpRight,
-  FiUsers, FiMessageSquare, FiClipboard,
+  FiUsers, FiClipboard,
   FiCalendar
 } from 'react-icons/fi';
 

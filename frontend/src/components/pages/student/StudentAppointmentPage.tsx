@@ -9,9 +9,9 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { appointmentApi, myApi } from '../../../utils/api';
 import { 
   FiPlus, FiSearch, FiCalendar, FiClock, FiUser, 
-  FiCheckCircle, FiXCircle, FiEdit3, FiTrash2, FiX,
+  FiXCircle, FiEdit3, FiX,
   FiMapPin, FiVideo, FiPhone, FiChevronLeft, FiChevronRight,
-  FiGrid, FiList, FiRefreshCw
+  FiGrid, FiList
 } from 'react-icons/fi';
 
 const StudentAppointmentPage: React.FC = () => {

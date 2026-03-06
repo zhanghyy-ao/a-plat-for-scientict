@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  FaUserGraduate, FaUniversity, FaGraduationCap, FaBriefcase, 
-  FaPhone, FaEnvelope, FaMapMarkerAlt, FaFlask, 
-  FaAward, FaEdit, FaSave, FaChevronRight, FaSpinner
+  FaUserGraduate, FaUniversity, FaGraduationCap, 
+  FaPhone, FaEnvelope, FaFlask, 
+  FaEdit, FaSave, FaSpinner
 } from 'react-icons/fa';
 import { myApi } from '../../../utils/api';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -21,7 +21,7 @@ interface MentorInfo {
 }
 
 const GlassMentorProfilePage: React.FC = () => {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [mentorInfo, setMentorInfo] = useState<MentorInfo | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
