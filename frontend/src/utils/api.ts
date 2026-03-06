@@ -1,4 +1,8 @@
-const API_BASE_URL = 'http://localhost:5000';
+// 根据环境自动选择 API 地址
+const isGitHubPages = window.location.hostname.includes('github.io');
+const API_BASE_URL = isGitHubPages 
+  ? 'https://your-backend-server.com'  // GitHub Pages 环境下使用你的后端服务器地址
+  : 'http://localhost:5000';            // 本地开发环境
 
 let authToken: string | null = null;
 
@@ -37,7 +41,7 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     return response.json();
   } catch (error: any) {
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      throw new Error('无法连接到服务器，请检查后端服务是否运行 (http://localhost:5000)');
+      throw new Error('无法连接到服务器，请检查后端服务是否运行');
     }
     throw error;
   }
