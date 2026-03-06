@@ -71,7 +71,7 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleRegister = (user: any, token: string) => {
+  const handleRegister = (user: any, _token: string) => {
     // 注册成功后，根据角色导航到不同页面
     if (user?.role === 'mentor') {
       navigate('/');

@@ -10,8 +10,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({
-  title,
-  subtitle,
+  title: _title,
+  subtitle: _subtitle,
   children,
   showNavbar = true,
   className = '',

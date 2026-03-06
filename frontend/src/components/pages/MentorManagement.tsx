@@ -5,7 +5,7 @@ import Footer from '../layout/Footer';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { useAuth } from '../../contexts/AuthContext';
-import { mentorApi, studentApi, myApi } from '../../utils/api';
+import { mentorApi, myApi } from '../../utils/api';
 import { 
   FiUser, FiMail, FiEdit, FiPlus, FiTrash2, 
   FiSearch, FiSave, FiX, FiBook, FiCalendar,
@@ -15,7 +15,7 @@ import {
 const MentorManagement: React.FC = () => {
   const { user } = useAuth();
   const [mentors, setMentors] = useState<any[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
+  const [_students, _setStudents] = useState<any[]>([]);
   const [myStudents, setMyStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

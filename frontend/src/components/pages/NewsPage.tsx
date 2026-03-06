@@ -41,16 +41,6 @@ const NewsPage: React.FC = () => {
     ? news 
     : news.filter(item => item.category === activeCategory);
 
-  const getCategoryLabel = (category: string) => {
-    const labels: Record<string, string> = {
-      academic: '学术活动',
-      admission: '招生信息',
-      cooperation: '合作交流',
-      event: '实验室活动'
-    };
-    return labels[category] || category;
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header title="新闻公告" subtitle="了解实验室的最新动态、学术活动和招生信息" />
