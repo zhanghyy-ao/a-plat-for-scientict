@@ -13,15 +13,15 @@ const Footer: React.FC = () => {
   const resources = [
     { name: '学生管理', path: '/student-management' },
     { name: '导师管理', path: '/mentor-management' },
-    { name: '学术资源', path: '#' },
-    { name: '实验室设备', path: '#' },
+    { name: '学术资源', path: '#resources' },
+    { name: '实验室设备', path: '#equipment' },
   ];
 
   return (
     <footer className="bg-dark-gray border-t border-light-gray/10 py-12">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="md:col-span-1">
+          <div>
             <h3 className="text-xl font-orbitron font-bold text-electric-blue mb-4">
               计算机学院实验室
             </h3>

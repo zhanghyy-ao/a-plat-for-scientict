@@ -12,7 +12,8 @@ import {
   FiCheckCircle, FiClock, FiStar, FiCalendar, 
   FiFileText, FiBookOpen, FiEdit3, FiPlus, 
   FiAlertCircle, FiCheckSquare,
-  FiChevronRight, FiMoreHorizontal, FiTrendingUp
+  FiChevronRight, FiMoreHorizontal, FiTrendingUp,
+  FiTrash2
 } from 'react-icons/fi';
 
 const DashboardPage: React.FC = () => {
@@ -30,6 +31,10 @@ const DashboardPage: React.FC = () => {
     due_date: ''
   });
   const [error, setError] = useState<string | null>(null);
+  
+  // 删除确认模态框状态
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -66,13 +71,20 @@ const DashboardPage: React.FC = () => {
     setError(null);
     
     try {
-      const dataToSend = {
-        ...newTodo,
+      const dataToSend: any = {
         title: newTodo.title.trim(),
-        description: newTodo.description?.trim() || ''
+        description: newTodo.description?.trim() || '',
+        priority: newTodo.priority
       };
       
-      await todoApi.createTodo(dataToSend);
+      // 只有在选择了日期时才发送 due_date
+      if (newTodo.due_date && newTodo.due_date.trim() !== '') {
+        dataToSend.due_date = newTodo.due_date;
+      }
+      
+      const createdTodo = await todoApi.createTodo(dataToSend);
+      // 直接更新本地状态，不重新加载所有数据
+      setTodos(prev => [createdTodo, ...prev]);
       setShowAddTodoModal(false);
       setNewTodo({
         title: '',
@@ -80,7 +92,6 @@ const DashboardPage: React.FC = () => {
         priority: 'medium',
         due_date: ''
       });
-      loadDashboardData();
     } catch (error: any) {
       console.error('Failed to add todo:', error);
       setError(error.message || '保存失败，请重试');
@@ -91,11 +102,46 @@ const DashboardPage: React.FC = () => {
     try {
       const newStatus = todo.status === 'completed' ? 'pending' : 'completed';
       await todoApi.updateTodo(todo.id, { status: newStatus });
-      loadDashboardData();
+      // 直接更新本地状态，不重新加载所有数据
+      setTodos(prev => prev.map(t => 
+        t.id === todo.id 
+          ? { ...t, status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null }
+          : t
+      ));
     } catch (error) {
       console.error('Failed to update todo:', error);
     }
   };
+
+  const openDeleteModal = (todoId: number) => {
+    setDeletingTodoId(todoId);
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setDeletingTodoId(null);
+  };
+
+  const handleDeleteTodo = async () => {
+    if (!deletingTodoId) return;
+    try {
+      await todoApi.deleteTodo(deletingTodoId.toString());
+      // 直接更新本地状态，不重新加载所有数据
+      setTodos(prev => prev.filter(t => t.id !== deletingTodoId));
+      closeDeleteModal();
+    } catch (error) {
+      console.error('Failed to delete todo:', error);
+      alert('删除失败，请重试');
+    }
+  };
+
+  // 对待办事项进行排序：未完成的在前面，已完成的在后面
+  const sortedTodos = [...todos].sort((a, b) => {
+    if (a.status === 'completed' && b.status !== 'completed') return 1;
+    if (a.status !== 'completed' && b.status === 'completed') return -1;
+    return 0;
+  });
 
   const stats = {
     pendingTodos: todos.filter(t => t.status === 'pending').length,
@@ -126,12 +172,12 @@ const DashboardPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex gradient-bg particle-bg">
-      <Sidebar type="student" />
-      
-      <div className="flex-1 flex flex-col min-h-screen">
-        <Header title="个人工作台" subtitle="高效管理您的学术日程" />
-        
+    <div className="min-h-screen flex flex-col gradient-bg particle-bg">
+      <Header showNavbar={true} />
+
+      <div className="flex-1 flex pt-20">
+        <Sidebar type="student" />
+
         <main className="flex-1 container mx-auto px-6 py-8">
           {loading ? (
             <div className="flex items-center justify-center py-20">
@@ -197,20 +243,25 @@ const DashboardPage: React.FC = () => {
                       </Button>
                     </div>
                     <div className="space-y-3">
-                      {todos.slice(0, 5).map((todo, index) => (
+                      {sortedTodos.slice(0, 5).map((todo, index) => (
                         <motion.div
                           key={todo.id}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 }}
-                          className="p-4 bg-[var(--card)]/50 rounded-xl border border-white/5 hover:border-electric-blue/30 transition-all group"
+                          className={`p-4 bg-[var(--card)]/50 rounded-xl border transition-all group ${
+                            todo.status === 'completed' 
+                              ? 'border-gray-700/50 opacity-75' 
+                              : 'border-white/5 hover:border-electric-blue/30'
+                          }`}
                         >
                           <div className="flex items-start gap-4">
                             <button
                               onClick={() => handleToggleTodo(todo)}
+                              title={todo.status === 'completed' ? '点击取消完成' : '点击标记为完成'}
                               className={`mt-1 flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                                 todo.status === 'completed' 
-                                  ? 'bg-emerald-500 border-emerald-500 text-white' 
+                                  ? 'bg-emerald-500 border-emerald-500 text-white hover:bg-emerald-600 hover:border-emerald-600' 
                                   : 'border-gray-500 hover:border-electric-blue'
                               }`}
                             >
@@ -226,15 +277,24 @@ const DashboardPage: React.FC = () => {
                                 </span>
                               </div>
                               {todo.description && (
-                                <p className="text-gray-400 text-sm mt-1 line-clamp-2">{todo.description}</p>
+                                <p className={`text-sm mt-1 line-clamp-2 ${todo.status === 'completed' ? 'text-gray-600' : 'text-gray-400'}`}>
+                                  {todo.description}
+                                </p>
                               )}
                               {todo.due_date && (
-                                <p className="text-gray-500 text-xs mt-2 flex items-center gap-1">
+                                <p className={`text-xs mt-2 flex items-center gap-1 ${todo.status === 'completed' ? 'text-gray-600' : 'text-gray-500'}`}>
                                   <FiCalendar className="w-3 h-3" />
                                   截止: {new Date(todo.due_date).toLocaleDateString('zh-CN')}
                                 </p>
                               )}
                             </div>
+                            <button
+                              onClick={() => openDeleteModal(todo.id)}
+                              className="flex-shrink-0 p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                              title="删除"
+                            >
+                              <FiTrash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </motion.div>
                       ))}
@@ -461,8 +521,47 @@ const DashboardPage: React.FC = () => {
           </div>
         )}
 
-        <Footer />
+        {/* 删除确认模态框 */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-md"
+            >
+              <Card className="p-6">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <FiTrash2 className="w-6 h-6 text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white font-orbitron">确认删除</h3>
+                    <p className="text-gray-400 text-sm mt-1">确定要删除这个待办事项吗？此操作无法撤销。</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={closeDeleteModal}
+                    className="border-white/20"
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    onClick={handleDeleteTodo}
+                    className="bg-red-500 hover:bg-red-600 border-0"
+                  >
+                    <FiTrash2 className="w-4 h-4 mr-2" />
+                    删除
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+        )}
+
       </div>
+      <Footer />
     </div>
   );
 };

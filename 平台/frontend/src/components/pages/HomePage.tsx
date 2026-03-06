@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../layout/Header';
 import Footer from '../layout/Footer';
 import HeroSection from '../ui/HeroSection';
@@ -11,10 +11,69 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import MentorLayout from '../layout/MentorLayout';
 import GlassMentorDashboard from './mentor/GlassMentorDashboard';
+import { newsApi, achievementApi, mentorApi } from '../../utils/api';
+
+interface NewsItem {
+  id: string;
+  title: string;
+  category: 'academic' | 'admission' | 'cooperation' | 'event';
+  publish_date: string;
+  content: string;
+}
+
+interface Achievement {
+  id: string;
+  title: string;
+  type: 'paper' | 'project' | 'award' | 'patent';
+  authors: string[];
+  publish_date: string;
+  description: string;
+}
+
+interface Mentor {
+  id: string;
+  name: string;
+  title: string;
+  department: string;
+  research_direction: string;
+  email?: string;
+}
 
 const HomePage: React.FC = () => {
   const { user } = useAuth();
-  
+  const [latestNews, setLatestNews] = useState<NewsItem[]>([]);
+  const [keyAchievements, setKeyAchievements] = useState<Achievement[]>([]);
+  const [teamMembers, setTeamMembers] = useState<Mentor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadHomeData();
+  }, []);
+
+  const loadHomeData = async () => {
+    try {
+      setLoading(true);
+      const [newsData, achievementsData, mentorsData] = await Promise.all([
+        newsApi.getNews(),
+        achievementApi.getAchievements(),
+        mentorApi.getMentors()
+      ]);
+      
+      // 只取最新的3条新闻
+      setLatestNews(newsData.slice(0, 3));
+      
+      // 只取最新的3个成果
+      setKeyAchievements(achievementsData.slice(0, 3));
+      
+      // 只取前4个导师
+      setTeamMembers(mentorsData.slice(0, 4));
+    } catch (error) {
+      console.error('Failed to load home data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (user?.role === 'mentor') {
     return (
       <MentorLayout>
@@ -22,60 +81,6 @@ const HomePage: React.FC = () => {
       </MentorLayout>
     );
   }
-  // 模拟数据
-  const latestNews = [
-    {
-      id: 1,
-      title: '实验室成功举办2026年计算机科学前沿研讨会',
-      category: 'academic' as const,
-      date: '2026-02-20',
-      summary: '本次研讨会邀请了多位国内外知名学者，共同探讨计算机科学领域的最新研究成果和发展趋势。',
-      image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=academic%20conference%20with%20people%20discussing%20computer%20science%20topics%20in%20a%20modern%20lab&image_size=landscape_16_9',
-    },
-    {
-      id: 2,
-      title: '2026年秋季招生开始，欢迎优秀学子加入',
-      category: 'admission' as const,
-      date: '2026-02-15',
-      summary: '实验室面向全国招收优秀的本科生、研究生和博士生，提供良好的研究环境和学术氛围。',
-      image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=university%20admission%20information%20poster%20with%20students%20and%20campus%20background&image_size=landscape_16_9',
-    },
-    {
-      id: 3,
-      title: '实验室与多家企业达成合作协议',
-      category: 'cooperation' as const,
-      date: '2026-02-10',
-      summary: '为促进产学研结合，实验室与多家知名企业签署了合作协议，共同推动技术创新和成果转化。',
-      image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=business%20partnership%20signing%20ceremony%20between%20university%20lab%20and%20companies&image_size=landscape_16_9',
-    },
-  ];
-
-  const keyAchievements = [
-    {
-      id: 1,
-      title: '基于深度学习的图像识别算法研究',
-      type: 'paper' as const,
-      authors: ['张三', '李四', '王五'],
-      date: '2026-01',
-      description: '提出了一种新的深度学习模型，在ImageNet数据集上取得了state-of-the-art的性能。',
-    },
-    {
-      id: 2,
-      title: '智能机器人控制系统开发',
-      type: 'project' as const,
-      authors: ['赵六', '钱七', '孙八'],
-      date: '2025-12',
-      description: '开发了一套基于强化学习的智能机器人控制系统，实现了自主导航和操作。',
-    },
-    {
-      id: 3,
-      title: '计算机视觉技术在医疗领域的应用',
-      type: 'award' as const,
-      authors: ['周九', '吴十'],
-      date: '2025-11',
-      description: '该项目获得了国家科技进步二等奖，为医疗诊断提供了新的技术手段。',
-    },
-  ];
 
   const researchAreas = [
     {
@@ -97,37 +102,6 @@ const HomePage: React.FC = () => {
       title: '网络安全',
       description: '密码学、网络防护、安全协议',
       icon: '🔒',
-    },
-  ];
-
-  const teamMembers = [
-    {
-      id: 1,
-      name: '张教授',
-      position: '实验室主任',
-      researchArea: '人工智能、机器学习',
-      email: 'zhang@computer.edu.cn',
-    },
-    {
-      id: 2,
-      name: '李副教授',
-      position: '副主任',
-      researchArea: '计算机视觉、图像处理',
-      email: 'li@computer.edu.cn',
-    },
-    {
-      id: 3,
-      name: '王讲师',
-      position: '研究员',
-      researchArea: '机器人技术、智能控制',
-      email: 'wang@computer.edu.cn',
-    },
-    {
-      id: 4,
-      name: '赵助教',
-      position: '博士后',
-      researchArea: '网络安全、密码学',
-      email: 'zhao@computer.edu.cn',
     },
   ];
 
@@ -212,18 +186,32 @@ const HomePage: React.FC = () => {
             <div className="w-20 h-1 bg-electric-blue mx-auto"></div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {latestNews.map((news) => (
-              <NewsCard
-                key={news.id}
-                title={news.title}
-                category={news.category}
-                date={news.date}
-                summary={news.summary}
-                image={news.image}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-electric-blue"></div>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {latestNews.map((news) => (
+                  <NewsCard
+                    key={news.id}
+                    title={news.title}
+                    category={news.category}
+                    date={news.publish_date}
+                    summary={news.content}
+                    image={`https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(news.title)}&image_size=landscape_16_9`}
+                  />
+                ))}
+              </div>
+
+              {latestNews.length === 0 && (
+                <div className="text-center py-12 text-light-gray">
+                  暂无新闻数据
+                </div>
+              )}
+            </>
+          )}
 
           <div className="text-center mt-12">
             <Button variant="outline" href="/news">
@@ -249,18 +237,32 @@ const HomePage: React.FC = () => {
             <div className="w-20 h-1 bg-electric-blue mx-auto"></div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {keyAchievements.map((achievement) => (
-              <AchievementCard
-                key={achievement.id}
-                title={achievement.title}
-                type={achievement.type}
-                authors={achievement.authors}
-                date={achievement.date}
-                description={achievement.description}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-electric-blue"></div>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {keyAchievements.map((achievement) => (
+                  <AchievementCard
+                    key={achievement.id}
+                    title={achievement.title}
+                    type={achievement.type}
+                    authors={achievement.authors || []}
+                    date={achievement.publish_date?.substring(0, 7) || '-'}
+                    description={achievement.description}
+                  />
+                ))}
+              </div>
+
+              {keyAchievements.length === 0 && (
+                <div className="text-center py-12 text-light-gray">
+                  暂无成果数据
+                </div>
+              )}
+            </>
+          )}
 
           <div className="text-center mt-12">
             <Button variant="outline" href="/achievements">
@@ -323,17 +325,31 @@ const HomePage: React.FC = () => {
             <div className="w-20 h-1 bg-electric-blue mx-auto"></div>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {teamMembers.map((member) => (
-              <TeamMemberCard
-                key={member.id}
-                name={member.name}
-                position={member.position}
-                researchArea={member.researchArea}
-                email={member.email}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-electric-blue"></div>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                {teamMembers.map((member) => (
+                  <TeamMemberCard
+                    key={member.id}
+                    name={member.name}
+                    position={member.title}
+                    researchArea={member.research_direction || member.department}
+                    email={member.email || ''}
+                  />
+                ))}
+              </div>
+
+              {teamMembers.length === 0 && (
+                <div className="text-center py-12 text-light-gray">
+                  暂无团队成员数据
+                </div>
+              )}
+            </>
+          )}
 
           <div className="text-center mt-12">
             <Button variant="outline" href="/about">

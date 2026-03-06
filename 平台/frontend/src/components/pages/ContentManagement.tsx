@@ -36,6 +36,12 @@ const ContentManagement: React.FC = () => {
                 成果管理
               </Link>
               <Link 
+                to="/content-management/research-areas"
+                className="block py-2 px-4 rounded-lg transition-colors hover:bg-electric-blue/20 text-white hover:text-electric-blue"
+              >
+                研究方向
+              </Link>
+              <Link 
                 to="/content-management/about"
                 className="block py-2 px-4 rounded-lg transition-colors hover:bg-electric-blue/20 text-white hover:text-electric-blue"
               >
@@ -78,6 +84,14 @@ const ContentManagement: React.FC = () => {
                 <h4 className="text-lg font-semibold text-white mb-3">成果管理</h4>
                 <p className="text-light-gray mb-4">管理实验室的研究成果，包括论文、项目和奖项。</p>
                 <Button href="/content-management/achievements" variant="outline">
+                  进入管理
+                </Button>
+              </div>
+
+              <div className="bg-dark-gray border border-light-gray/10 rounded-lg p-6 hover:border-electric-blue transition-colors">
+                <h4 className="text-lg font-semibold text-white mb-3">研究方向</h4>
+                <p className="text-light-gray mb-4">管理实验室的研究方向，包括添加、编辑和删除研究方向。</p>
+                <Button href="/content-management/research-areas" variant="outline">
                   进入管理
                 </Button>
               </div>

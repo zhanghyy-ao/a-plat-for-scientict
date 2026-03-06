@@ -9,7 +9,7 @@ import { studentApi, mentorApi } from '../../../utils/api';
 import { 
   FiUser, FiMail, FiEdit, FiPlus, FiTrash2, 
   FiSearch, FiSave, FiX, FiBook, FiCalendar,
-  FiUsers
+  FiUsers, FiLock
 } from 'react-icons/fi';
 
 const AdminStudentManagement: React.FC = () => {
@@ -20,35 +20,61 @@ const AdminStudentManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingStudentId, setDeletingStudentId] = useState<string | null>(null);
   const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [newPassword, setNewPassword] = useState('');
   const [newStudent, setNewStudent] = useState({
     username: '',
     password: '',
     name: '',
-    student_id: '',
+    student_no: '',
     email: '',
     phone: '',
     major: '',
     grade: '',
-    research_area: '',
+    gender: '',
+    student_type: 'undergraduate',
+    research_topic: '',
+    enrollment_date: new Date().toISOString().split('T')[0],
     mentor_id: ''
   });
 
   useEffect(() => {
+    console.log('AdminStudentManagement - user:', user);
     loadAdminData();
-  }, [user]);
+  }, []);
 
   const loadAdminData = async () => {
     try {
       setLoading(true);
-      const [studentsData, mentorsData] = await Promise.all([
-        studentApi.getStudents(),
-        mentorApi.getMentors()
-      ]);
-      setStudents(studentsData);
-      setMentors(mentorsData);
-    } catch (error) {
+      console.log('Loading admin data...');
+      
+      // 分别加载，便于调试
+      let studentsData = [];
+      let mentorsData = [];
+      
+      try {
+        studentsData = await studentApi.getStudents();
+        console.log('Students loaded:', studentsData);
+      } catch (e: any) {
+        console.error('Failed to load students:', e);
+        alert('加载学生列表失败: ' + e.message);
+      }
+      
+      try {
+        mentorsData = await mentorApi.getMentors();
+        console.log('Mentors loaded:', mentorsData);
+      } catch (e: any) {
+        console.error('Failed to load mentors:', e);
+      }
+      
+      setStudents(studentsData || []);
+      setMentors(mentorsData || []);
+    } catch (error: any) {
       console.error('Failed to load admin data:', error);
+      alert('加载数据失败: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -56,23 +82,30 @@ const AdminStudentManagement: React.FC = () => {
 
   const handleAddStudent = async () => {
     try {
+      setLoading(true);
       await studentApi.createStudent(newStudent);
       setShowAddModal(false);
       setNewStudent({
         username: '',
         password: '',
         name: '',
-        student_id: '',
+        student_no: '',
         email: '',
         phone: '',
         major: '',
         grade: '',
-        research_area: '',
+        gender: '',
+        student_type: 'undergraduate',
+        research_topic: '',
+        enrollment_date: new Date().toISOString().split('T')[0],
         mentor_id: ''
       });
       loadAdminData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add student:', error);
+      alert('添加学生失败: ' + (error.message || '未知错误'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -88,13 +121,24 @@ const AdminStudentManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteStudent = async (id: string) => {
-    if (!confirm('确定要删除这个学生吗？')) return;
+  const openDeleteModal = (id: string) => {
+    setDeletingStudentId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!deletingStudentId) return;
     try {
-      await studentApi.deleteStudent(id);
+      setLoading(true);
+      await studentApi.deleteStudent(deletingStudentId);
+      setShowDeleteModal(false);
+      setDeletingStudentId(null);
       loadAdminData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete student:', error);
+      alert('删除学生失败: ' + (error.message || '未知错误'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,6 +149,30 @@ const AdminStudentManagement: React.FC = () => {
     } catch (error) {
       console.error('Failed to assign mentor:', error);
     }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!editingStudent) return;
+    if (!newPassword || newPassword.length < 6) {
+      alert('密码长度至少为6位');
+      return;
+    }
+    try {
+      await studentApi.updateStudentPassword(editingStudent.id, newPassword);
+      setShowPasswordModal(false);
+      setNewPassword('');
+      setEditingStudent(null);
+      alert('密码修改成功');
+    } catch (error: any) {
+      console.error('Failed to update password:', error);
+      alert(error.message || '密码修改失败');
+    }
+  };
+
+  const openPasswordModal = (student: any) => {
+    setEditingStudent(student);
+    setNewPassword('');
+    setShowPasswordModal(true);
   };
 
   const filteredStudents = students.filter(student =>
@@ -249,7 +317,18 @@ const AdminStudentManagement: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteStudent(student.id)}
+                          onClick={() => openPasswordModal(student)}
+                          className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
+                          title="修改密码"
+                        >
+                          <FiLock className="w-4 h-4" />
+                        </Button>
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openDeleteModal(student.id)}
                           className="border-red-500/30 text-red-400 hover:bg-red-500/10"
                         >
                           <FiTrash2 className="w-4 h-4" />
@@ -330,8 +409,8 @@ const AdminStudentManagement: React.FC = () => {
                   <label className="block text-sm text-gray-400 mb-2">学号 *</label>
                   <input
                     type="text"
-                    value={newStudent.student_id}
-                    onChange={(e) => setNewStudent({...newStudent, student_id: e.target.value})}
+                    value={newStudent.student_no}
+                    onChange={(e) => setNewStudent({...newStudent, student_no: e.target.value})}
                     className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
                     placeholder="学号"
                   />
@@ -347,14 +426,26 @@ const AdminStudentManagement: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">性别</label>
+                  <label className="block text-sm text-gray-400 mb-2">电话</label>
                   <input
                     type="text"
                     value={newStudent.phone}
                     onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})}
                     className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
-                    placeholder="男/女"
+                    placeholder="联系电话"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">性别</label>
+                  <select
+                    value={newStudent.gender}
+                    onChange={(e) => setNewStudent({...newStudent, gender: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-blue/50"
+                  >
+                    <option value="">请选择</option>
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">专业</label>
@@ -376,14 +467,35 @@ const AdminStudentManagement: React.FC = () => {
                     placeholder="年级"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">学生类型</label>
+                  <select
+                    value={newStudent.student_type}
+                    onChange={(e) => setNewStudent({...newStudent, student_type: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-blue/50"
+                  >
+                    <option value="undergraduate">本科生</option>
+                    <option value="master">硕士生</option>
+                    <option value="phd">博士生</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">入学日期</label>
+                  <input
+                    type="date"
+                    value={newStudent.enrollment_date}
+                    onChange={(e) => setNewStudent({...newStudent, enrollment_date: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                  />
+                </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-400 mb-2">研究方向</label>
+                  <label className="block text-sm text-gray-400 mb-2">研究课题</label>
                   <input
                     type="text"
-                    value={newStudent.research_area}
-                    onChange={(e) => setNewStudent({...newStudent, research_area: e.target.value})}
+                    value={newStudent.research_topic}
+                    onChange={(e) => setNewStudent({...newStudent, research_topic: e.target.value})}
                     className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
-                    placeholder="研究方向"
+                    placeholder="研究课题"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -533,6 +645,124 @@ const AdminStudentManagement: React.FC = () => {
                   >
                     <FiSave className="w-4 h-4 mr-2" />
                     保存
+                  </Button>
+                </motion.div>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      )}
+
+      {showPasswordModal && editingStudent && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={springConfig}
+            className="w-full max-w-md"
+          >
+            <Card className="p-6 glass-strong">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-white font-orbitron">修改密码</h3>
+                <button
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setEditingStudent(null);
+                    setNewPassword('');
+                  }}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <FiX className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="mb-4">
+                <p className="text-gray-400 mb-4">
+                  正在为 <span className="text-white font-semibold">{editingStudent.name}</span> ({editingStudent.student_no}) 修改密码
+                </p>
+                <label className="block text-sm text-gray-400 mb-2">新密码 *</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                  placeholder="请输入新密码（至少6位）"
+                />
+              </div>
+              <div className="flex gap-3 mt-6 justify-end">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowPasswordModal(false);
+                      setEditingStudent(null);
+                      setNewPassword('');
+                    }}
+                    className="border-white/20"
+                  >
+                    取消
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={handleUpdatePassword}
+                    className="bg-gradient-to-r from-electric-blue to-neon-cyan hover:from-electric-blue/90 hover:to-neon-cyan/90 border-0"
+                  >
+                    <FiSave className="w-4 h-4 mr-2" />
+                    保存
+                  </Button>
+                </motion.div>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={springConfig}
+            className="w-full max-w-md"
+          >
+            <Card className="p-6 glass-strong">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-white font-orbitron">确认删除</h3>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeletingStudentId(null);
+                  }}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <FiX className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="mb-6">
+                <p className="text-gray-400">
+                  确定要删除这个学生吗？此操作不可恢复。
+                </p>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setDeletingStudentId(null);
+                    }}
+                    className="border-white/20"
+                  >
+                    取消
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={handleDeleteStudent}
+                    className="bg-red-500 hover:bg-red-600 border-0"
+                  >
+                    <FiTrash2 className="w-4 h-4 mr-2" />
+                    删除
                   </Button>
                 </motion.div>
               </div>

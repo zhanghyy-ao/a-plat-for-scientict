@@ -23,17 +23,24 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     headers['Authorization'] = `Bearer ${authToken}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${url}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      headers,
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+      throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      throw new Error('无法连接到服务器，请检查后端服务是否运行 (http://localhost:5000)');
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 export const authApi = {
@@ -42,17 +49,33 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     }),
+  register: (data: {
+    username: string;
+    password: string;
+    role: 'student' | 'mentor';
+    email?: string;
+    name: string;
+    student_no?: string;
+    grade?: string;
+    major?: string;
+    title?: string;
+    department?: string;
+  }) =>
+    request<any>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
   getMe: () => request<any>('/auth/me'),
 };
 
 export const studentApi = {
   getStudents: (mentorId?: string) => {
     const query = mentorId ? `?mentor_id=${mentorId}` : '';
-    return request<any[]>(`/students${query}`);
+    return request<any[]>(`/students/${query}`);
   },
   getStudent: (id: string) => request<any>(`/students/${id}`),
   createStudent: (data: any) =>
-    request<any>('/students', {
+    request<any>('/students/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -65,6 +88,11 @@ export const studentApi = {
     request<any>(`/students/${id}`, {
       method: 'DELETE',
     }),
+  updateStudentPassword: (id: string, password: string) =>
+    request<any>(`/students/${id}/password`, {
+      method: 'PUT',
+      body: JSON.stringify({ password }),
+    }),
   assignMentor: (id: string, mentorId: string) =>
     request<any>(`/students/${id}/assign-mentor`, {
       method: 'PUT',
@@ -73,10 +101,10 @@ export const studentApi = {
 };
 
 export const mentorApi = {
-  getMentors: () => request<any[]>('/mentors'),
+  getMentors: () => request<any[]>('/mentors/'),
   getMentor: (id: string) => request<any>(`/mentors/${id}`),
   createMentor: (data: any) =>
-    request<any>('/mentors', {
+    request<any>('/mentors/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -89,6 +117,11 @@ export const mentorApi = {
     request<any>(`/mentors/${id}`, {
       method: 'DELETE',
     }),
+  updateMentorPassword: (id: string, password: string) =>
+    request<any>(`/mentors/${id}/password`, {
+      method: 'PUT',
+      body: JSON.stringify({ password }),
+    }),
   getMentorStudents: (id: string) =>
     request<any[]>(`/mentors/${id}/students`),
 };
@@ -97,8 +130,15 @@ export const myApi = {
   getMyStudents: () => request<any[]>('/my/students'),
   getMyStudentDetail: (id: string) =>
     request<any>(`/my/students/${id}`),
+  getMyMentor: () => request<any>('/my/mentor'),
   getMyProgress: () => request<any[]>('/my/progress'),
   getMyPendingProgress: () => request<any[]>('/my/pending-progress'),
+  getMyProfile: () => request<any>('/my/profile'),
+  updateMyProfile: (data: any) =>
+    request<any>('/my/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 };
 
 export const progressApi = {
@@ -107,12 +147,12 @@ export const progressApi = {
     if (studentId) params.append('student_id', studentId);
     if (status) params.append('status', status);
     const query = params.toString() ? `?${params.toString()}` : '';
-    return request<any[]>(`/progress${query}`);
+    return request<any[]>(`/progress/${query}`);
   },
   getProgressDetail: (id: string) =>
     request<any>(`/progress/${id}`),
   createProgress: (data: any) =>
-    request<any>('/progress', {
+    request<any>('/progress/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -136,10 +176,10 @@ export const progressApi = {
 };
 
 export const projectApi = {
-  getProjects: () => request<any[]>('/projects'),
+  getProjects: () => request<any[]>('/projects/'),
   getProject: (id: string) => request<any>(`/projects/${id}`),
   createProject: (data: any) =>
-    request<any>('/projects', {
+    request<any>('/projects/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -155,10 +195,10 @@ export const projectApi = {
 };
 
 export const newsApi = {
-  getNews: () => request<any[]>('/news'),
+  getNews: () => request<any[]>('/news/'),
   getNewsItem: (id: string) => request<any>(`/news/${id}`),
   createNews: (data: any) =>
-    request<any>('/news', {
+    request<any>('/news/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -174,10 +214,10 @@ export const newsApi = {
 };
 
 export const achievementApi = {
-  getAchievements: () => request<any[]>('/achievements'),
+  getAchievements: () => request<any[]>('/achievements/'),
   getAchievement: (id: string) => request<any>(`/achievements/${id}`),
   createAchievement: (data: any) =>
-    request<any>('/achievements', {
+    request<any>('/achievements/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -198,11 +238,11 @@ export const todoApi = {
     if (status) params.append('status', status);
     if (priority) params.append('priority', priority);
     const query = params.toString() ? `?${params.toString()}` : '';
-    return request<any[]>(`/todos${query}`);
+    return request<any[]>(`/todos/${query}`);
   },
   getTodo: (id: string) => request<any>(`/todos/${id}`),
   createTodo: (data: any) =>
-    request<any>('/todos', {
+    request<any>('/todos/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -223,21 +263,21 @@ export const resourceApi = {
     if (type) params.append('type', type);
     if (category) params.append('category', category);
     const query = params.toString() ? `?${params.toString()}` : '';
-    return request<any[]>(`/resources${query}`);
+    return request<any[]>(`/resources/${query}`);
   },
   getResource: (id: string) => request<any>(`/resources/${id}`),
   createResource: (data: any) =>
-    request<any>('/resources', {
+    request<any>('/resources/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 };
 
 export const noteApi = {
-  getNotes: () => request<any[]>('/notes'),
+  getNotes: () => request<any[]>('/notes/'),
   getNote: (id: string) => request<any>(`/notes/${id}`),
   createNote: (data: any) =>
-    request<any>('/notes', {
+    request<any>('/notes/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -255,11 +295,11 @@ export const noteApi = {
 export const bookingApi = {
   getBookings: (status?: string) => {
     const query = status ? `?status=${status}` : '';
-    return request<any[]>(`/bookings${query}`);
+    return request<any[]>(`/bookings/${query}`);
   },
   getBooking: (id: string) => request<any>(`/bookings/${id}`),
   createBooking: (data: any) =>
-    request<any>('/bookings', {
+    request<any>('/bookings/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -270,9 +310,9 @@ export const bookingApi = {
 };
 
 export const messageApi = {
-  getMessages: () => request<any>('/messages'),
+  getMessages: () => request<any>('/messages/'),
   sendMessage: (data: any) =>
-    request<any>('/messages', {
+    request<any>('/messages/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -282,9 +322,9 @@ export const messageApi = {
 };
 
 export const taskApi = {
-  getTasks: () => request<any[]>('/tasks'),
+  getTasks: () => request<any[]>('/tasks/'),
   createTask: (data: any) =>
-    request<any>('/tasks', {
+    request<any>('/tasks/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -306,9 +346,9 @@ export const taskApi = {
 };
 
 export const appointmentApi = {
-  getAppointments: () => request<any[]>('/appointments'),
+  getAppointments: () => request<any[]>('/appointments/'),
   createAppointment: (data: any) =>
-    request<any>('/appointments', {
+    request<any>('/appointments/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -325,7 +365,7 @@ export const appointmentApi = {
 };
 
 export const notificationApi = {
-  getNotifications: () => request<any[]>('/notifications'),
+  getNotifications: () => request<any[]>('/notifications/'),
   getNotification: (id: string) => request<any>(`/notifications/${id}`),
   markAsRead: (id: string) =>
     request<any>(`/notifications/${id}`, {
@@ -349,4 +389,24 @@ export const notificationApi = {
 
 export const healthApi = {
   check: () => request<any>('/health'),
+};
+
+export const channelApi = {
+  getChannels: () => request<any[]>('/channels/'),
+  createChannel: (data: any) =>
+    request<any>('/channels/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  getChannel: (id: string) => request<any>(`/channels/${id}/`),
+  deleteChannel: (id: string) =>
+    request<any>(`/channels/${id}/`, {
+      method: 'DELETE',
+    }),
+  getMessages: (channelId: string) => request<any[]>(`/channels/${channelId}/messages/`),
+  sendMessage: (channelId: string, data: any) =>
+    request<any>(`/channels/${channelId}/messages/`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };

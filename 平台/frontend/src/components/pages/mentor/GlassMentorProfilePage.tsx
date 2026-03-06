@@ -1,34 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FaUserGraduate, FaUniversity, FaGraduationCap, FaBriefcase, 
   FaPhone, FaEnvelope, FaMapMarkerAlt, FaFlask, 
-  FaAward, FaEdit, FaSave, FaChevronRight
+  FaAward, FaEdit, FaSave, FaChevronRight, FaSpinner
 } from 'react-icons/fa';
+import { myApi } from '../../../utils/api';
+import { useAuth } from '../../../contexts/AuthContext';
+
+interface MentorInfo {
+  id: string;
+  name: string;
+  title: string;
+  department: string;
+  research_direction?: string;
+  bio?: string;
+  email?: string;
+  phone?: string;
+  student_count?: number;
+}
 
 const GlassMentorProfilePage: React.FC = () => {
-  const [mentorInfo, setMentorInfo] = useState({
-    id: '1',
-    name: '王教授',
-    title: '教授',
-    department: '计算机科学与技术系',
-    researchArea: ['人工智能', '机器学习', '数据挖掘'],
-    educationBackground: '博士，清华大学计算机科学与技术',
-    workExperience: '2005年至今，在计算机学院任教',
-    contactInfo: {
-      phone: '13900139000',
-      email: 'wang@example.com',
-      office: '科技楼 501'
-    },
-    projects: ['智能推荐系统研究', '机器学习算法优化'],
-    achievements: ['国家自然科学基金', '教育部科技进步奖'],
-    students: ['张三', '李四', '王五']
-  });
+  const { user } = useAuth();
+  const [mentorInfo, setMentorInfo] = useState<MentorInfo | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSave = () => {
-    setIsEditing(false);
-    alert('个人信息已保存');
+  // 加载导师信息
+  useEffect(() => {
+    loadMentorInfo();
+  }, []);
+
+  const loadMentorInfo = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await myApi.getMyProfile();
+      setMentorInfo(data);
+    } catch (err: any) {
+      console.error('Failed to load mentor info:', err);
+      setError(err.message || '加载导师信息失败');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!mentorInfo) return;
+    
+    try {
+      setIsSaving(true);
+      const updateData = {
+        name: mentorInfo.name,
+        title: mentorInfo.title,
+        department: mentorInfo.department,
+        research_direction: mentorInfo.research_direction,
+        bio: mentorInfo.bio,
+        email: mentorInfo.email,
+        phone: mentorInfo.phone,
+      };
+      
+      const updatedData = await myApi.updateMyProfile(updateData);
+      setMentorInfo(updatedData);
+      setIsEditing(false);
+      alert('个人信息已保存');
+    } catch (err: any) {
+      console.error('Failed to save mentor info:', err);
+      alert('保存失败: ' + (err.message || '未知错误'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof MentorInfo, value: string) => {
+    if (mentorInfo) {
+      setMentorInfo({ ...mentorInfo, [field]: value });
+    }
   };
 
   const containerVariants = {
@@ -54,6 +103,43 @@ const GlassMentorProfilePage: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="particle-bg py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <FaSpinner className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+          <p className="text-white/60">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="particle-bg py-8 min-h-screen flex items-center justify-center">
+        <div className="glass-strong rounded-3xl p-8 text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={loadMentorInfo}
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+          >
+            重试
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!mentorInfo) {
+    return (
+      <div className="particle-bg py-8 min-h-screen flex items-center justify-center">
+        <div className="glass-strong rounded-3xl p-8 text-center">
+          <p className="text-white/60">暂无导师信息</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="particle-bg py-8">
       <div className="max-w-6xl mx-auto px-4">
@@ -71,14 +157,15 @@ const GlassMentorProfilePage: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={isEditing ? handleSave : () => setIsEditing(true)}
+            disabled={isSaving}
             className={`px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 transition-all duration-300 ${
               isEditing
                 ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg hover:shadow-green-500/40'
                 : 'bg-gradient-to-r from-blue-600 to-sky-500 text-white hover:shadow-lg hover:shadow-blue-500/40'
-            }`}
+            } ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            {isEditing ? <FaSave /> : <FaEdit />}
-            {isEditing ? '保存' : '编辑'}
+            {isSaving ? <FaSpinner className="animate-spin" /> : (isEditing ? <FaSave /> : <FaEdit />)}
+            {isSaving ? '保存中...' : (isEditing ? '保存' : '编辑')}
           </motion.button>
         </motion.div>
 
@@ -97,14 +184,14 @@ const GlassMentorProfilePage: React.FC = () => {
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 className="w-28 h-28 bg-gradient-to-br from-blue-600 to-sky-500 rounded-3xl flex items-center justify-center text-white text-5xl font-bold mr-8 shadow-lg shadow-blue-500/30"
               >
-                {mentorInfo.name?.charAt(0) || 'W'}
+                {mentorInfo.name?.charAt(0) || '导'}
               </motion.div>
               <div className="flex-1">
                 {isEditing ? (
                   <input
                     type="text"
-                    value={mentorInfo.name}
-                    onChange={(e) => setMentorInfo({ ...mentorInfo, name: e.target.value })}
+                    value={mentorInfo.name || ''}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
                     className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-xl text-white text-2xl font-bold font-orbitron focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                   />
                 ) : (
@@ -114,23 +201,23 @@ const GlassMentorProfilePage: React.FC = () => {
                   {isEditing ? (
                     <input
                       type="text"
-                      value={mentorInfo.title}
-                      onChange={(e) => setMentorInfo({ ...mentorInfo, title: e.target.value })}
+                      value={mentorInfo.title || ''}
+                      onChange={(e) => handleInputChange('title', e.target.value)}
                       className="px-3 py-1 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     />
                   ) : (
-                    <span>{mentorInfo.title}</span>
+                    <span>{mentorInfo.title || '未设置职称'}</span>
                   )}
                   <span>•</span>
                   {isEditing ? (
                     <input
                       type="text"
-                      value={mentorInfo.department}
-                      onChange={(e) => setMentorInfo({ ...mentorInfo, department: e.target.value })}
+                      value={mentorInfo.department || ''}
+                      onChange={(e) => handleInputChange('department', e.target.value)}
                       className="px-3 py-1 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     />
                   ) : (
-                    <span>{mentorInfo.department}</span>
+                    <span>{mentorInfo.department || '未设置部门'}</span>
                   )}
                 </div>
               </div>
@@ -152,12 +239,12 @@ const GlassMentorProfilePage: React.FC = () => {
                       {isEditing ? (
                         <input
                           type="text"
-                          value={mentorInfo.name}
-                          onChange={(e) => setMentorInfo({ ...mentorInfo, name: e.target.value })}
+                          value={mentorInfo.name || ''}
+                          onChange={(e) => handleInputChange('name', e.target.value)}
                           className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
-                        <p className="text-white">{mentorInfo.name}</p>
+                        <p className="text-white">{mentorInfo.name || '未设置'}</p>
                       )}
                     </div>
                     <div>
@@ -165,12 +252,12 @@ const GlassMentorProfilePage: React.FC = () => {
                       {isEditing ? (
                         <input
                           type="text"
-                          value={mentorInfo.title}
-                          onChange={(e) => setMentorInfo({ ...mentorInfo, title: e.target.value })}
+                          value={mentorInfo.title || ''}
+                          onChange={(e) => handleInputChange('title', e.target.value)}
                           className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
-                        <p className="text-white">{mentorInfo.title}</p>
+                        <p className="text-white">{mentorInfo.title || '未设置'}</p>
                       )}
                     </div>
                     <div>
@@ -178,12 +265,12 @@ const GlassMentorProfilePage: React.FC = () => {
                       {isEditing ? (
                         <input
                           type="text"
-                          value={mentorInfo.department}
-                          onChange={(e) => setMentorInfo({ ...mentorInfo, department: e.target.value })}
+                          value={mentorInfo.department || ''}
+                          onChange={(e) => handleInputChange('department', e.target.value)}
                           className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
-                        <p className="text-white">{mentorInfo.department}</p>
+                        <p className="text-white">{mentorInfo.department || '未设置'}</p>
                       )}
                     </div>
                   </div>
@@ -206,15 +293,12 @@ const GlassMentorProfilePage: React.FC = () => {
                       {isEditing ? (
                         <input
                           type="text"
-                          value={mentorInfo.contactInfo.phone}
-                          onChange={(e) => setMentorInfo({ 
-                            ...mentorInfo, 
-                            contactInfo: { ...mentorInfo.contactInfo, phone: e.target.value } 
-                          })}
+                          value={mentorInfo.phone || ''}
+                          onChange={(e) => handleInputChange('phone', e.target.value)}
                           className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
-                        <p className="text-white">{mentorInfo.contactInfo.phone}</p>
+                        <p className="text-white">{mentorInfo.phone || '未设置'}</p>
                       )}
                     </div>
                     <div>
@@ -225,34 +309,12 @@ const GlassMentorProfilePage: React.FC = () => {
                       {isEditing ? (
                         <input
                           type="email"
-                          value={mentorInfo.contactInfo.email}
-                          onChange={(e) => setMentorInfo({ 
-                            ...mentorInfo, 
-                            contactInfo: { ...mentorInfo.contactInfo, email: e.target.value } 
-                          })}
+                          value={mentorInfo.email || ''}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
                           className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                       ) : (
-                        <p className="text-white">{mentorInfo.contactInfo.email}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-white/50 mb-2 text-sm font-rajdhani flex items-center gap-2">
-                        <FaMapMarkerAlt className="text-sm" />
-                        办公室
-                      </label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={mentorInfo.contactInfo.office}
-                          onChange={(e) => setMentorInfo({ 
-                            ...mentorInfo, 
-                            contactInfo: { ...mentorInfo.contactInfo, office: e.target.value } 
-                          })}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        />
-                      ) : (
-                        <p className="text-white">{mentorInfo.contactInfo.office}</p>
+                        <p className="text-white">{mentorInfo.email || '未设置'}</p>
                       )}
                     </div>
                   </div>
@@ -269,30 +331,17 @@ const GlassMentorProfilePage: React.FC = () => {
                     研究方向
                   </h3>
                   {isEditing ? (
-                    <input
-                      type="text"
-                      value={mentorInfo.researchArea.join(', ')}
-                      onChange={(e) => setMentorInfo({ 
-                        ...mentorInfo, 
-                        researchArea: e.target.value.split(',').map(item => item.trim()) 
-                      })}
+                    <textarea
+                      value={mentorInfo.research_direction || ''}
+                      onChange={(e) => handleInputChange('research_direction', e.target.value)}
                       className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                      placeholder="用逗号分隔多个研究方向"
+                      rows={4}
+                      placeholder="请输入研究方向"
                     />
                   ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {mentorInfo.researchArea.map((area, index) => (
-                        <motion.span
-                          key={index}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-600/20 to-sky-500/20 border border-blue-500/30 rounded-full text-white/80 text-sm"
-                        >
-                          {area}
-                        </motion.span>
-                      ))}
-                    </div>
+                    <p className="text-white/80 leading-relaxed">
+                      {mentorInfo.research_direction || '未设置研究方向'}
+                    </p>
                   )}
                 </motion.div>
 
@@ -302,17 +351,20 @@ const GlassMentorProfilePage: React.FC = () => {
                 >
                   <h3 className="font-semibold font-orbitron text-white mb-6 flex items-center gap-3">
                     <FaGraduationCap className="text-sky-400" />
-                    教育背景
+                    个人简介
                   </h3>
                   {isEditing ? (
                     <textarea
-                      value={mentorInfo.educationBackground}
-                      onChange={(e) => setMentorInfo({ ...mentorInfo, educationBackground: e.target.value })}
+                      value={mentorInfo.bio || ''}
+                      onChange={(e) => handleInputChange('bio', e.target.value)}
                       className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                      rows={3}
+                      rows={4}
+                      placeholder="请输入个人简介"
                     />
                   ) : (
-                    <p className="text-white/80 leading-relaxed">{mentorInfo.educationBackground}</p>
+                    <p className="text-white/80 leading-relaxed">
+                      {mentorInfo.bio || '未设置个人简介'}
+                    </p>
                   )}
                 </motion.div>
 
@@ -321,100 +373,15 @@ const GlassMentorProfilePage: React.FC = () => {
                   className="glass rounded-2xl p-6"
                 >
                   <h3 className="font-semibold font-orbitron text-white mb-6 flex items-center gap-3">
-                    <FaBriefcase className="text-purple-400" />
-                    工作经历
+                    <FaUserGraduate className="text-purple-400" />
+                    指导学生
                   </h3>
-                  {isEditing ? (
-                    <textarea
-                      value={mentorInfo.workExperience}
-                      onChange={(e) => setMentorInfo({ ...mentorInfo, workExperience: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                      rows={3}
-                    />
-                  ) : (
-                    <p className="text-white/80 leading-relaxed">{mentorInfo.workExperience}</p>
-                  )}
+                  <div className="flex items-center gap-4">
+                    <div className="text-4xl font-bold text-white">{mentorInfo.student_count || 0}</div>
+                    <div className="text-white/60">名学生</div>
+                  </div>
                 </motion.div>
               </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            variants={itemVariants}
-            className="glass-strong rounded-3xl p-8"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="glass rounded-2xl p-6"
-              >
-                <h3 className="font-semibold font-orbitron text-white mb-6 flex items-center gap-3">
-                  <FaFlask className="text-purple-400" />
-                  负责项目
-                </h3>
-                <ul className="space-y-3">
-                  {mentorInfo.projects.map((project, index) => (
-                    <motion.li
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center text-white/80"
-                    >
-                      <FaChevronRight className="mr-3 text-purple-400 text-sm" />
-                      {project}
-                    </motion.li>
-                  ))}
-                </ul>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="glass rounded-2xl p-6"
-              >
-                <h3 className="font-semibold font-orbitron text-white mb-6 flex items-center gap-3">
-                  <FaAward className="text-sky-400" />
-                  主要成果
-                </h3>
-                <ul className="space-y-3">
-                  {mentorInfo.achievements.map((achievement, index) => (
-                    <motion.li
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center text-white/80"
-                    >
-                      <FaChevronRight className="mr-3 text-sky-400 text-sm" />
-                      {achievement}
-                    </motion.li>
-                  ))}
-                </ul>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="glass rounded-2xl p-6"
-              >
-                <h3 className="font-semibold font-orbitron text-white mb-6 flex items-center gap-3">
-                  <FaUserGraduate className="text-purple-400" />
-                  指导学生
-                </h3>
-                <ul className="space-y-3">
-                  {mentorInfo.students.map((student, index) => (
-                    <motion.li
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center text-white/80"
-                    >
-                      <FaChevronRight className="mr-3 text-purple-400 text-sm" />
-                      {student}
-                    </motion.li>
-                  ))}
-                </ul>
-              </motion.div>
             </div>
           </motion.div>
         </motion.div>

@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { 
   FiHome, FiBook, FiLayout,
   FiFileText, FiEdit3, FiArrowUpRight,
-  FiUsers, FiMessageSquare, FiClipboard
+  FiUsers, FiMessageSquare, FiClipboard,
+  FiCalendar
 } from 'react-icons/fi';
 
 interface SidebarProps {
@@ -17,6 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type, className = '' }) => {
     { name: '个人工作台', path: '/dashboard', icon: <FiLayout /> },
     { name: '学生中心', path: '/student-hub', icon: <FiHome /> },
     { name: '课题进度', path: '/progress', icon: <FiBook /> },
+    { name: '预约管理', path: '/appointments', icon: <FiCalendar /> },
     { name: '学习资源', path: '/resources', icon: <FiFileText /> },
     { name: '个人笔记', path: '/notes', icon: <FiEdit3 /> },
   ];
@@ -25,7 +27,6 @@ const Sidebar: React.FC<SidebarProps> = ({ type, className = '' }) => {
     { name: '导师工作台', path: '/mentor-dashboard', icon: <FiHome /> },
     { name: '我的学生', path: '/my-students', icon: <FiUsers /> },
     { name: '待审进度', path: '/pending-progress', icon: <FiClipboard /> },
-    { name: '消息中心', path: '/messages', icon: <FiMessageSquare /> },
   ];
 
   const links = type === 'student' ? studentLinks : mentorLinks;
@@ -46,12 +47,12 @@ const Sidebar: React.FC<SidebarProps> = ({ type, className = '' }) => {
   };
 
   return (
-    <motion.aside 
+    <motion.aside
       initial="hidden"
       animate="visible"
       variants={containerVariants}
       className={`
-        w-64 h-screen sticky top-0 z-40
+        w-64 h-[calc(100vh-80px)] sticky top-[80px] z-40
         transition-all duration-300 flex flex-col
         ${className}
       `}

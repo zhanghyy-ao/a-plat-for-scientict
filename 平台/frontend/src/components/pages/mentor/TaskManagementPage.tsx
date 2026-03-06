@@ -5,7 +5,7 @@ import Footer from '../../layout/Footer';
 import Button from '../../common/Button';
 import Card from '../../common/Card';
 import { useAuth } from '../../../contexts/AuthContext';
-import { taskApi } from '../../../utils/api';
+import { taskApi, myApi } from '../../../utils/api';
 import { 
   FiPlus, FiSearch, FiCalendar, FiUser, 
   FiCheckCircle, FiEdit3, FiTrash2, FiX,
@@ -16,6 +16,7 @@ const TaskManagementPage: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -25,7 +26,7 @@ const TaskManagementPage: React.FC = () => {
     description: '',
     priority: 'medium',
     due_date: '',
-    assigned_to: ''
+    student_ids: [] as string[]
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +44,7 @@ const TaskManagementPage: React.FC = () => {
 
   useEffect(() => {
     loadTasks();
+    loadStudents();
   }, [user]);
 
   const loadTasks = async () => {
@@ -54,6 +56,15 @@ const TaskManagementPage: React.FC = () => {
       console.error('Failed to load tasks:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadStudents = async () => {
+    try {
+      const data = await myApi.getMyStudents();
+      setStudents(data);
+    } catch (error) {
+      console.error('Failed to load students:', error);
     }
   };
 
@@ -85,7 +96,7 @@ const TaskManagementPage: React.FC = () => {
         description: '',
         priority: 'medium',
         due_date: '',
-        assigned_to: ''
+        student_ids: []
       });
       loadTasks();
     } catch (error: any) {
@@ -101,7 +112,7 @@ const TaskManagementPage: React.FC = () => {
       description: task.description || '',
       priority: task.priority || 'medium',
       due_date: task.due_date ? task.due_date.split('T')[0] : '',
-      assigned_to: task.assigned_to || ''
+      student_ids: task.student_ids || []
     });
     setShowAddModal(true);
   };
@@ -170,7 +181,7 @@ const TaskManagementPage: React.FC = () => {
                     description: '',
                     priority: 'medium',
                     due_date: '',
-                    assigned_to: ''
+                    student_ids: []
                   });
                   setShowAddModal(true);
                 }}
@@ -245,10 +256,10 @@ const TaskManagementPage: React.FC = () => {
                             截止: {new Date(task.due_date).toLocaleDateString('zh-CN')}
                           </span>
                         )}
-                        {task.assigned_to_name && (
+                        {task.assigned_students && task.assigned_students.length > 0 && (
                           <span className="flex items-center gap-1">
                             <FiUser className="w-3 h-3" />
-                            分配给: {task.assigned_to_name}
+                            分配给: {task.assigned_students.map((s: any) => s.name).join(', ')}
                           </span>
                         )}
                         <span className="flex items-center gap-1">
@@ -370,6 +381,31 @@ const TaskManagementPage: React.FC = () => {
                       className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-blue/50"
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">分配给学生</label>
+                  <select
+                    multiple
+                    value={taskForm.student_ids}
+                    onChange={(e) => {
+                      const options = e.target.options;
+                      const selectedValues: string[] = [];
+                      for (let i = 0; i < options.length; i++) {
+                        if (options[i].selected) {
+                          selectedValues.push(options[i].value);
+                        }
+                      }
+                      setTaskForm({...taskForm, student_ids: selectedValues});
+                    }}
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-blue/50 min-h-[120px]"
+                  >
+                    {students.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.name} ({student.student_no})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-gray-500 text-xs mt-2">按住 Ctrl/Cmd 键可选择多个学生</p>
                 </div>
               </div>
               <div className="flex gap-3 mt-6 justify-end">

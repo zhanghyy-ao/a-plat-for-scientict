@@ -19,7 +19,7 @@ const MentorLayout: React.FC<MentorLayoutProps> = ({ children }) => {
     { path: '/my-students', name: '我的学生', icon: FaUsers },
     { path: '/pending-progress', name: '待审进度', icon: FaClipboardList },
     { path: '/tasks', name: '任务管理', icon: FaTasks },
-    { path: '/appointments', name: '预约管理', icon: FaCalendarAlt },
+    { path: '/mentor-appointments', name: '预约管理', icon: FaCalendarAlt },
     { path: '/messages', name: '消息中心', icon: FaComments },
     { path: '/notifications', name: '通知中心', icon: FaBell },
     { path: '/mentor-profile', name: '个人资料', icon: FaUserCog },
@@ -28,8 +28,8 @@ const MentorLayout: React.FC<MentorLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header showNavbar={true} />
-      <main className="flex-1 flex pt-20">
-        <aside className="w-64 bg-dark-gray/80 backdrop-blur-md border-r border-white/10 flex-shrink-0">
+      <main className="flex-1 flex pt-20 overflow-hidden">
+        <aside className="w-64 h-[calc(100vh-80px)] sticky top-[80px] bg-dark-gray/80 backdrop-blur-md border-r border-white/10 flex-shrink-0 overflow-y-auto">
           <div className="p-6 pt-4">
             <h2 className="text-xl font-bold font-orbitron text-white mb-6">导师中心</h2>
             <nav className="space-y-2">
@@ -58,7 +58,7 @@ const MentorLayout: React.FC<MentorLayoutProps> = ({ children }) => {
           </div>
         </aside>
         
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-y-auto">
           {children}
         </div>
       </main>

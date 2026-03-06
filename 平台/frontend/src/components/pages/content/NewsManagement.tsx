@@ -5,6 +5,7 @@ import Header from '../../layout/Header';
 import Footer from '../../layout/Footer';
 import Button from '../../common/Button';
 import { useAuth } from '../../../contexts/AuthContext';
+import { newsApi } from '../../../utils/api';
 
 interface News {
   id: string;
@@ -33,27 +34,6 @@ const NewsManagement: React.FC = () => {
   });
   const { user } = useAuth();
 
-  const mockNews: News[] = [
-    {
-      id: '1',
-      title: '实验室在人工智能领域取得重大突破',
-      content: '实验室研究团队在国际顶级会议上发表了最新研究成果...',
-      category: 'academic',
-      publish_date: '2024-01-15',
-      author: '李教授',
-      view_count: 1250
-    },
-    {
-      id: '2',
-      title: '实验室2024年招生开始',
-      content: '欢迎优秀的本科生和研究生加入我们的研究团队...',
-      category: 'admission',
-      publish_date: '2024-01-10',
-      author: '王副教授',
-      view_count: 890
-    }
-  ];
-
   const categories = [
     { value: 'all', label: '全部' },
     { value: 'academic', label: '学术新闻' },
@@ -63,11 +43,21 @@ const NewsManagement: React.FC = () => {
   ];
 
   useEffect(() => {
-    setTimeout(() => {
-      setNews(mockNews);
-      setLoading(false);
-    }, 500);
+    loadNews();
   }, []);
+
+  const loadNews = async () => {
+    try {
+      setLoading(true);
+      const data = await newsApi.getNews();
+      setNews(data);
+    } catch (error) {
+      console.error('Failed to load news:', error);
+      alert('加载新闻失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredNews = news.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,20 +86,22 @@ const NewsManagement: React.FC = () => {
     return colors[category] || 'bg-gray-500/20 text-gray-400';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingNews) {
-      setNews(news.map(n => n.id === editingNews.id ? { ...n, ...formData } as News : n));
-    } else {
-      const newNewsItem: News = {
-        ...formData,
-        id: Date.now().toString()
-      } as News;
-      setNews([newNewsItem, ...news]);
+    try {
+      if (editingNews) {
+        await newsApi.updateNews(editingNews.id, formData);
+      } else {
+        await newsApi.createNews(formData);
+      }
+      setShowModal(false);
+      setEditingNews(null);
+      resetForm();
+      loadNews();
+    } catch (error) {
+      console.error('Failed to save news:', error);
+      alert('保存失败');
     }
-    setShowModal(false);
-    setEditingNews(null);
-    resetForm();
   };
 
   const resetForm = () => {
@@ -129,9 +121,15 @@ const NewsManagement: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('确定要删除这条新闻吗？')) {
-      setNews(news.filter(n => n.id !== id));
+      try {
+        await newsApi.deleteNews(id);
+        loadNews();
+      } catch (error) {
+        console.error('Failed to delete news:', error);
+        alert('删除失败');
+      }
     }
   };
 

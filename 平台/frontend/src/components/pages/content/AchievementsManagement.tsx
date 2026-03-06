@@ -5,6 +5,7 @@ import Header from '../../layout/Header';
 import Footer from '../../layout/Footer';
 import Button from '../../common/Button';
 import { useAuth } from '../../../contexts/AuthContext';
+import { achievementApi } from '../../../utils/api';
 
 interface Achievement {
   id: string;
@@ -39,33 +40,6 @@ const AchievementsManagement: React.FC = () => {
   });
   const { user } = useAuth();
 
-  const mockAchievements: Achievement[] = [
-    {
-      id: '1',
-      title: '基于深度学习的图像识别研究',
-      type: 'paper',
-      description: '提出了一种新的深度学习架构，在图像识别任务上取得了突破性进展...',
-      publish_date: '2024-01-10',
-      authors: ['李教授', '张三', '李四'],
-      venue: 'CVPR 2024',
-      level: 'international',
-      link: 'https://example.com/paper1',
-      citations: 45
-    },
-    {
-      id: '2',
-      title: '智能问答系统',
-      type: 'project',
-      description: '开发了一套基于自然语言处理的智能问答系统...',
-      publish_date: '2023-12-15',
-      authors: ['王副教授', '王五'],
-      venue: '科技部重点研发项目',
-      level: 'national',
-      link: 'https://example.com/project1',
-      citations: 0
-    }
-  ];
-
   const types = [
     { value: 'all', label: '全部' },
     { value: 'paper', label: '论文' },
@@ -81,11 +55,21 @@ const AchievementsManagement: React.FC = () => {
   ];
 
   useEffect(() => {
-    setTimeout(() => {
-      setAchievements(mockAchievements);
-      setLoading(false);
-    }, 500);
+    loadAchievements();
   }, []);
+
+  const loadAchievements = async () => {
+    try {
+      setLoading(true);
+      const data = await achievementApi.getAchievements();
+      setAchievements(data);
+    } catch (error) {
+      console.error('Failed to load achievements:', error);
+      alert('加载成果失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredAchievements = achievements.filter(achievement => {
     const matchesSearch = achievement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,20 +107,22 @@ const AchievementsManagement: React.FC = () => {
     return names[level] || level;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingAchievement) {
-      setAchievements(achievements.map(a => a.id === editingAchievement.id ? { ...a, ...formData } as Achievement : a));
-    } else {
-      const newAchievement: Achievement = {
-        ...formData,
-        id: Date.now().toString()
-      } as Achievement;
-      setAchievements([newAchievement, ...achievements]);
+    try {
+      if (editingAchievement) {
+        await achievementApi.updateAchievement(editingAchievement.id, formData);
+      } else {
+        await achievementApi.createAchievement(formData);
+      }
+      setShowModal(false);
+      setEditingAchievement(null);
+      resetForm();
+      loadAchievements();
+    } catch (error) {
+      console.error('Failed to save achievement:', error);
+      alert('保存失败');
     }
-    setShowModal(false);
-    setEditingAchievement(null);
-    resetForm();
   };
 
   const resetForm = () => {
@@ -159,9 +145,15 @@ const AchievementsManagement: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('确定要删除这个成果吗？')) {
-      setAchievements(achievements.filter(a => a.id !== id));
+      try {
+        await achievementApi.deleteAchievement(id);
+        loadAchievements();
+      } catch (error) {
+        console.error('Failed to delete achievement:', error);
+        alert('删除失败');
+      }
     }
   };
 
@@ -263,7 +255,7 @@ const AchievementsManagement: React.FC = () => {
                       </p>
                       <div className="flex flex-wrap gap-4 text-sm text-light-gray">
                         <span>发表于: {achievement.venue}</span>
-                        <span>作者: {achievement.authors.join(', ')}</span>
+                        <span>作者: {achievement.authors?.join(', ') || '-'}</span>
                         {achievement.citations > 0 && (
                           <span>引用: {achievement.citations}</span>
                         )}

@@ -5,28 +5,32 @@ import Footer from '../../layout/Footer';
 import Button from '../../common/Button';
 import Card from '../../common/Card';
 import { useAuth } from '../../../contexts/AuthContext';
-import { appointmentApi } from '../../../utils/api';
+import { appointmentApi, myApi } from '../../../utils/api';
 import { 
   FiPlus, FiSearch, FiCalendar, FiClock, FiUser, 
   FiCheckCircle, FiXCircle, FiEdit3, FiTrash2, FiX,
-  FiMapPin, FiVideo, FiPhone
+  FiMapPin, FiVideo, FiPhone, FiChevronLeft, FiChevronRight,
+  FiGrid, FiList, FiCheck
 } from 'react-icons/fi';
 
 const AppointmentManagementPage: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [appointmentForm, setAppointmentForm] = useState({
     title: '',
     description: '',
     start_time: '',
     end_time: '',
     location: '',
-    meeting_type: 'offline',
+    appointment_type: 'offline',
     student_id: ''
   });
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +63,7 @@ const AppointmentManagementPage: React.FC = () => {
 
   useEffect(() => {
     loadAppointments();
+    loadStudents();
   }, [user]);
 
   const loadAppointments = async () => {
@@ -73,8 +78,16 @@ const AppointmentManagementPage: React.FC = () => {
     }
   };
 
+  const loadStudents = async () => {
+    try {
+      const data = await myApi.getMyStudents();
+      setStudents(data);
+    } catch (error) {
+      console.error('Failed to load students:', error);
+    }
+  };
+
   const handleSaveAppointment = async () => {
-    // 表单验证
     if (!appointmentForm.title || appointmentForm.title.trim() === '') {
       setError('请输入预约标题');
       return;
@@ -89,6 +102,10 @@ const AppointmentManagementPage: React.FC = () => {
     }
     if (new Date(appointmentForm.start_time) >= new Date(appointmentForm.end_time)) {
       setError('结束时间必须晚于开始时间');
+      return;
+    }
+    if (!appointmentForm.student_id) {
+      setError('请选择学生');
       return;
     }
     
@@ -109,20 +126,24 @@ const AppointmentManagementPage: React.FC = () => {
       }
       setShowAddModal(false);
       setEditingAppointment(null);
-      setAppointmentForm({
-        title: '',
-        description: '',
-        start_time: '',
-        end_time: '',
-        location: '',
-        meeting_type: 'offline',
-        student_id: ''
-      });
+      resetForm();
       loadAppointments();
     } catch (error: any) {
       console.error('Failed to save appointment:', error);
       setError(error.message || '保存失败，请重试');
     }
+  };
+
+  const resetForm = () => {
+    setAppointmentForm({
+      title: '',
+      description: '',
+      start_time: '',
+      end_time: '',
+      location: '',
+      appointment_type: 'offline',
+      student_id: ''
+    });
   };
 
   const handleEditAppointment = (appointment: any) => {
@@ -133,8 +154,8 @@ const AppointmentManagementPage: React.FC = () => {
       start_time: appointment.start_time ? appointment.start_time.slice(0, 16) : '',
       end_time: appointment.end_time ? appointment.end_time.slice(0, 16) : '',
       location: appointment.location || '',
-      meeting_type: appointment.meeting_type || 'offline',
-      student_id: appointment.student_id || ''
+      appointment_type: appointment.appointment_type || 'offline',
+      student_id: appointment.student_id ? String(appointment.student_id) : ''
     });
     setShowAddModal(true);
   };
@@ -151,7 +172,7 @@ const AppointmentManagementPage: React.FC = () => {
 
   const handleUpdateStatus = async (appointment: any, newStatus: string) => {
     try {
-      await appointmentApi.updateAppointment(appointment.id, { ...appointment, status: newStatus });
+      await appointmentApi.updateAppointment(appointment.id, { status: newStatus });
       loadAppointments();
     } catch (error) {
       console.error('Failed to update appointment status:', error);
@@ -160,10 +181,88 @@ const AppointmentManagementPage: React.FC = () => {
 
   const filteredAppointments = appointments.filter(appointment => {
     const matchesSearch = appointment.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         appointment.description?.toLowerCase().includes(searchTerm.toLowerCase());
+                         appointment.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         appointment.student_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || appointment.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
+
+  // 日历相关函数
+  const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (year: number, month: number) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const getAppointmentsForDate = (date: Date) => {
+    return filteredAppointments.filter(appointment => {
+      const appointmentDate = new Date(appointment.start_time);
+      return appointmentDate.toDateString() === date.toDateString();
+    });
+  };
+
+  const renderCalendar = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+    
+    const days = [];
+    
+    // 空白日期
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-24 bg-slate-800/30 rounded-lg"></div>);
+    }
+    
+    // 实际日期
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dayAppointments = getAppointmentsForDate(date);
+      const isToday = new Date().toDateString() === date.toDateString();
+      
+      days.push(
+        <div 
+          key={day} 
+          className={`h-24 bg-slate-800/50 rounded-lg p-2 border transition-all cursor-pointer hover:border-electric-blue/50 ${
+            isToday ? 'border-electric-blue/50 bg-electric-blue/10' : 'border-white/5'
+          }`}
+          onClick={() => {
+            const dateStr = date.toISOString().slice(0, 16);
+            setAppointmentForm(prev => ({ ...prev, start_time: dateStr }));
+            setShowAddModal(true);
+          }}
+        >
+          <div className={`text-sm font-medium mb-1 ${isToday ? 'text-electric-blue' : 'text-gray-400'}`}>
+            {day}
+          </div>
+          <div className="space-y-1 overflow-hidden">
+            {dayAppointments.slice(0, 2).map((appt, idx) => (
+              <div 
+                key={idx}
+                className={`text-xs px-2 py-1 rounded truncate bg-gradient-to-r ${statusColors[appt.status]} text-white cursor-pointer`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditAppointment(appt);
+                }}
+              >
+                {appt.title}
+              </div>
+            ))}
+            {dayAppointments.length > 2 && (
+              <div className="text-xs text-gray-500">+{dayAppointments.length - 2} 更多</div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    return days;
+  };
+
+  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
   return (
     <div className="min-h-screen flex flex-col gradient-bg particle-bg">
@@ -177,7 +276,7 @@ const AppointmentManagementPage: React.FC = () => {
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="搜索预约标题或描述..."
+                  placeholder="搜索预约标题、描述或学生姓名..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
@@ -196,18 +295,30 @@ const AppointmentManagementPage: React.FC = () => {
                 <option value="completed">已完成</option>
                 <option value="cancelled">已取消</option>
               </select>
+              <div className="flex bg-slate-800/50 border border-white/10 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-4 py-3 flex items-center gap-2 transition-colors ${
+                    viewMode === 'list' ? 'bg-electric-blue/30 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <FiList className="w-4 h-4" />
+                  列表
+                </button>
+                <button
+                  onClick={() => setViewMode('calendar')}
+                  className={`px-4 py-3 flex items-center gap-2 transition-colors ${
+                    viewMode === 'calendar' ? 'bg-electric-blue/30 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <FiGrid className="w-4 h-4" />
+                  日历
+                </button>
+              </div>
               <Button 
                 onClick={() => {
                   setEditingAppointment(null);
-                  setAppointmentForm({
-                    title: '',
-                    description: '',
-                    start_time: '',
-                    end_time: '',
-                    location: '',
-                    meeting_type: 'offline',
-                    student_id: ''
-                  });
+                  resetForm();
                   setShowAddModal(true);
                 }}
                 className="bg-gradient-to-r from-electric-blue to-neon-cyan hover:from-electric-blue/90 hover:to-neon-cyan/90 border-0"
@@ -219,6 +330,44 @@ const AppointmentManagementPage: React.FC = () => {
           </div>
         </Card>
 
+        {viewMode === 'calendar' && (
+          <Card className="p-6 mb-6 glass">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white">
+                {currentDate.getFullYear()}年 {monthNames[currentDate.getMonth()]}
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+                >
+                  <FiChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setCurrentDate(new Date())}
+                  className="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white hover:bg-slate-700/50 transition-colors"
+                >
+                  今天
+                </button>
+                <button
+                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+                >
+                  <FiChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-7 gap-2 mb-2">
+              {weekDays.map(day => (
+                <div key={day} className="text-center text-gray-400 text-sm py-2">{day}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-2">
+              {renderCalendar()}
+            </div>
+          </Card>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
@@ -226,7 +375,7 @@ const AppointmentManagementPage: React.FC = () => {
               <p className="text-gray-400 animate-pulse">加载中...</p>
             </div>
           </div>
-        ) : (
+        ) : viewMode === 'list' ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredAppointments.map((appointment, index) => (
               <motion.div
@@ -267,6 +416,15 @@ const AppointmentManagementPage: React.FC = () => {
                           </button>
                         </>
                       )}
+                      {appointment.status === 'confirmed' && (
+                        <button
+                          onClick={() => handleUpdateStatus(appointment, 'completed')}
+                          className="p-2 hover:bg-blue-500/20 rounded-lg transition-colors text-blue-400"
+                          title="标记为已完成"
+                        >
+                          <FiCheck className="w-4 h-4" />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEditAppointment(appointment)}
                         className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-electric-blue"
@@ -298,8 +456,8 @@ const AppointmentManagementPage: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      {meetingTypeIcons[appointment.meeting_type]}
-                      <span>{meetingTypeLabels[appointment.meeting_type]}</span>
+                      {meetingTypeIcons[appointment.appointment_type]}
+                      <span>{meetingTypeLabels[appointment.appointment_type]}</span>
                       {appointment.location && (
                         <span className="text-gray-500">({appointment.location})</span>
                       )}
@@ -332,7 +490,7 @@ const AppointmentManagementPage: React.FC = () => {
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </main>
 
       {showAddModal && (
@@ -378,6 +536,21 @@ const AppointmentManagementPage: React.FC = () => {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm text-gray-400 mb-2">学生 *</label>
+                  <select
+                    value={appointmentForm.student_id}
+                    onChange={(e) => setAppointmentForm({...appointmentForm, student_id: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-blue/50"
+                  >
+                    <option value="">请选择学生</option>
+                    {students.map(student => (
+                      <option key={student.id} value={student.id}>
+                        {student.name} ({student.student_no})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm text-gray-400 mb-2">描述</label>
                   <textarea
                     value={appointmentForm.description}
@@ -411,8 +584,8 @@ const AppointmentManagementPage: React.FC = () => {
                   <div>
                     <label className="block text-sm text-gray-400 mb-2">会议类型</label>
                     <select
-                      value={appointmentForm.meeting_type}
-                      onChange={(e) => setAppointmentForm({...appointmentForm, meeting_type: e.target.value})}
+                      value={appointmentForm.appointment_type}
+                      onChange={(e) => setAppointmentForm({...appointmentForm, appointment_type: e.target.value})}
                       className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-blue/50"
                     >
                       <option value="offline">线下</option>

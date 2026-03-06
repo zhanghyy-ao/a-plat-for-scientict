@@ -2,296 +2,165 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Header from '../layout/Header';
 import Footer from '../layout/Footer';
+import Button from '../common/Button';
+import Card from '../common/Card';
 import { useAuth } from '../../contexts/AuthContext';
-
-interface Mentor {
-  id: string;
-  name: string;
-  title: string;
-  department: string;
-  researchArea: string[];
-  email: string;
-  phone: string;
-  studentCount: number;
-}
-
-interface Student {
-  id: string;
-  name: string;
-  studentId: string;
-  major: string;
-  grade: string;
-  studentType: 'undergraduate' | 'graduate' | 'phd';
-  researchArea: string;
-  email: string;
-}
-
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  status: 'planning' | 'ongoing' | 'completed';
-  startDate: string;
-  endDate?: string;
-  students: string[];
-  funding: string;
-  progress: number;
-}
-
-interface Achievement {
-  id: string;
-  title: string;
-  type: 'paper' | 'project' | 'award' | 'patent';
-  date: string;
-  authors: string[];
-  venue: string;
-  description: string;
-}
+import { mentorApi, studentApi, myApi } from '../../utils/api';
+import { 
+  FiUser, FiMail, FiEdit, FiPlus, FiTrash2, 
+  FiSearch, FiSave, FiX, FiBook, FiCalendar,
+  FiUsers, FiLock, FiPhone, FiBriefcase
+} from 'react-icons/fi';
 
 const MentorManagement: React.FC = () => {
   const { user } = useAuth();
+  const [mentors, setMentors] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
+  const [myStudents, setMyStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showProjectModal, setShowProjectModal] = useState(false);
-  const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFloatingMenu, setShowFloatingMenu] = useState(false);
-
-  const mentors: Mentor[] = [
-    {
-      id: '1',
-      name: '李教授',
-      title: '教授',
-      department: '计算机科学与技术系',
-      researchArea: ['人工智能', '机器学习'],
-      email: 'liprof@example.com',
-      phone: '13900139001',
-      studentCount: 5
-    },
-    {
-      id: '2',
-      name: '王副教授',
-      title: '副教授',
-      department: '软件工程系',
-      researchArea: ['软件工程', '分布式系统'],
-      email: 'wangprof@example.com',
-      phone: '13900139002',
-      studentCount: 3
-    },
-    {
-      id: '3',
-      name: '张讲师',
-      title: '讲师',
-      department: '人工智能系',
-      researchArea: ['计算机视觉', '深度学习'],
-      email: 'zhangprof@example.com',
-      phone: '13900139003',
-      studentCount: 4
-    }
-  ];
-
-  const mentorData = {
-    name: '李教授',
-    title: '教授',
-    department: '计算机科学与技术系',
-    researchArea: ['人工智能', '机器学习', '计算机视觉'],
-    educationBackground: '清华大学计算机科学博士',
-    workExperience: '20年科研和教学经验',
-    contactInfo: {
-      phone: '13900139001',
-      email: 'liprof@example.com',
-      office: '科研楼A301'
-    }
-  };
-
-  const students: Student[] = [
-    {
-      id: '1',
-      name: '张三',
-      studentId: '20230001',
-      major: '计算机科学与技术',
-      grade: '2023级',
-      studentType: 'graduate',
-      researchArea: '人工智能',
-      email: 'zhangsan@example.com'
-    },
-    {
-      id: '2',
-      name: '李四',
-      studentId: '20230002',
-      major: '软件工程',
-      grade: '2023级',
-      studentType: 'phd',
-      researchArea: '计算机视觉',
-      email: 'lisi@example.com'
-    },
-    {
-      id: '3',
-      name: '王五',
-      studentId: '20220001',
-      major: '人工智能',
-      grade: '2022级',
-      studentType: 'graduate',
-      researchArea: '机器学习',
-      email: 'wangwu@example.com'
-    }
-  ];
-
-  const projects: Project[] = [
-    {
-      id: '1',
-      title: '基于深度学习的图像识别研究',
-      description: '研究新一代深度学习架构，提升图像识别准确率',
-      status: 'ongoing',
-      startDate: '2023-06-01',
-      students: ['张三', '李四'],
-      funding: '国家自然科学基金',
-      progress: 65
-    },
-    {
-      id: '2',
-      title: '智能推荐系统开发',
-      description: '开发个性化推荐系统，应用于教育领域',
-      status: 'planning',
-      startDate: '2024-03-01',
-      students: ['王五'],
-      funding: '省部级项目',
-      progress: 20
-    },
-    {
-      id: '3',
-      title: '自然语言处理应用',
-      description: '研究NLP技术在智能问答中的应用',
-      status: 'completed',
-      startDate: '2022-09-01',
-      endDate: '2023-12-31',
-      students: ['赵六', '钱七'],
-      funding: '企业合作项目',
-      progress: 100
-    }
-  ];
-
-  const achievements: Achievement[] = [
-    {
-      id: '1',
-      title: '高效图像识别算法研究',
-      type: 'paper',
-      date: '2024-01-15',
-      authors: ['李教授', '张三', '李四'],
-      venue: 'CVPR 2024',
-      description: '发表于顶级计算机视觉会议'
-    },
-    {
-      id: '2',
-      title: '智能教育系统',
-      type: 'project',
-      date: '2023-11-20',
-      authors: ['李教授', '王五'],
-      venue: '教育部重点项目',
-      description: '获得省部级科技进步奖'
-    },
-    {
-      id: '3',
-      title: '一种深度学习训练方法',
-      type: 'patent',
-      date: '2023-08-10',
-      authors: ['李教授'],
-      venue: '国家发明专利',
-      description: '已获得授权'
-    }
-  ];
-
-  const filteredMentors = mentors.filter(mentor =>
-    mentor.name.includes(searchTerm) ||
-    mentor.department.includes(searchTerm) ||
-    mentor.researchArea.some(area => area.includes(searchTerm))
-  );
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingMentorId, setDeletingMentorId] = useState<string | null>(null);
+  const [editingMentor, setEditingMentor] = useState<any>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [newMentor, setNewMentor] = useState({
+    username: '',
+    password: '',
+    name: '',
+    title: '',
+    department: '',
+    email: '',
+    phone: '',
+    research_direction: ''
+  });
 
   useEffect(() => {
-    setTimeout(() => {
+    loadData();
+  }, [user]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      if (user?.role === 'admin') {
+        // Admin加载所有导师
+        const mentorsData = await mentorApi.getMentors();
+        setMentors(mentorsData);
+      } else if (user?.role === 'mentor') {
+        // 导师加载自己的学生
+        const studentsData = await myApi.getMyStudents();
+        setMyStudents(studentsData);
+      }
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    } finally {
       setLoading(false);
-    }, 500);
-  }, []);
-
-  const getStudentTypeName = (type: string) => {
-    const names: Record<string, string> = {
-      undergraduate: '本科生',
-      graduate: '研究生',
-      phd: '博士生'
-    };
-    return names[type] || type;
-  };
-
-  const getStudentTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      undergraduate: 'bg-blue-500/20 text-blue-400',
-      graduate: 'bg-green-500/20 text-green-400',
-      phd: 'bg-purple-500/20 text-purple-400'
-    };
-    return colors[type] || 'bg-gray-500/20 text-gray-400';
-  };
-
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      planning: 'bg-yellow-500/20 text-yellow-400',
-      ongoing: 'bg-green-500/20 text-green-400',
-      completed: 'bg-blue-500/20 text-blue-400'
-    };
-    return colors[status] || 'bg-gray-500/20 text-gray-400';
-  };
-
-  const getStatusText = (status: string) => {
-    const texts: Record<string, string> = {
-      planning: '规划中',
-      ongoing: '进行中',
-      completed: '已完成'
-    };
-    return texts[status] || status;
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'paper':
-        return '📄';
-      case 'project':
-        return '🔬';
-      case 'award':
-        return '🏆';
-      case 'patent':
-        return '💡';
-      default:
-        return '📋';
     }
   };
 
-  const handleAddMentor = () => {
-    alert('添加导师功能（需对接后端API）');
-    setShowAddModal(false);
-  };
-
-  const handleEditMentor = () => {
-    alert('编辑导师功能（需对接后端API）');
-    setShowEditModal(false);
-    setSelectedMentor(null);
-  };
-
-  const handleDeleteMentor = (_id: string) => {
-    if (confirm('确定要删除这位导师吗？')) {
-      alert('删除导师功能（需对接后端API）');
+  const handleAddMentor = async () => {
+    try {
+      await mentorApi.createMentor(newMentor);
+      setShowAddModal(false);
+      setNewMentor({
+        username: '',
+        password: '',
+        name: '',
+        title: '',
+        department: '',
+        email: '',
+        phone: '',
+        research_direction: ''
+      });
+      loadData();
+    } catch (error) {
+      console.error('Failed to add mentor:', error);
+      alert('添加导师失败');
     }
   };
 
-  const handleUpdateProject = () => {
-    alert('更新项目进度功能（需对接后端API）');
-    setShowProjectModal(false);
-    setSelectedProject(null);
+  const handleEditMentor = async () => {
+    if (!editingMentor) return;
+    try {
+      await mentorApi.updateMentor(editingMentor.id, editingMentor);
+      setShowEditModal(false);
+      setEditingMentor(null);
+      loadData();
+    } catch (error) {
+      console.error('Failed to update mentor:', error);
+      alert('更新导师信息失败');
+    }
   };
 
+  const openDeleteModal = (id: string) => {
+    setDeletingMentorId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteMentor = async () => {
+    if (!deletingMentorId) return;
+    try {
+      setLoading(true);
+      await mentorApi.deleteMentor(deletingMentorId);
+      setShowDeleteModal(false);
+      setDeletingMentorId(null);
+      loadData();
+      alert('导师删除成功');
+    } catch (error: any) {
+      console.error('Failed to delete mentor:', error);
+      alert('删除导师失败: ' + (error.message || '未知错误'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!editingMentor) return;
+    if (!newPassword || newPassword.length < 6) {
+      alert('密码长度至少为6位');
+      return;
+    }
+    try {
+      await mentorApi.updateMentorPassword(editingMentor.id, newPassword);
+      setShowPasswordModal(false);
+      setNewPassword('');
+      setEditingMentor(null);
+      alert('密码修改成功');
+    } catch (error: any) {
+      console.error('Failed to update password:', error);
+      alert(error.message || '密码修改失败');
+    }
+  };
+
+  const openPasswordModal = (mentor: any) => {
+    setEditingMentor(mentor);
+    setNewPassword('');
+    setShowPasswordModal(true);
+  };
+
+  const openEditModal = (mentor: any) => {
+    setEditingMentor({...mentor});
+    setShowEditModal(true);
+  };
+
+  const filteredMentors = mentors.filter(mentor =>
+    mentor.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    mentor.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    mentor.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const springConfig = {
+    type: 'spring' as const,
+    stiffness: 300,
+    damping: 30
+  };
+
+  // Admin视图
   if (user?.role === 'admin') {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-deep-space">
         <Header title="导师管理" subtitle="管理系统中的导师信息" />
         
         <div className="flex-1 container mx-auto px-4 py-8">
@@ -305,93 +174,128 @@ const MentorManagement: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
+              {/* 搜索和添加按钮 */}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div className="relative flex-1 w-full md:w-96">
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-light-gray/50" />
                   <input
                     type="text"
-                    placeholder="搜索导师姓名、部门或研究方向..."
+                    placeholder="搜索导师姓名、部门或职称..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-3 text-white placeholder-light-gray/50 focus:outline-none focus:border-electric-blue transition-colors"
+                    className="w-full bg-dark-gray border border-light-gray/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-light-gray/50 focus:outline-none focus:border-electric-blue transition-colors"
                   />
                 </div>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="bg-electric-blue text-deep-space font-semibold px-6 py-3 rounded-lg hover:bg-electric-blue/80 transition-colors"
-                >
-                  + 添加导师
-                </button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={() => setShowAddModal(true)}
+                    className="bg-gradient-to-r from-electric-blue to-neon-cyan text-deep-space font-semibold px-6 py-3 rounded-lg"
+                  >
+                    <FiPlus className="w-5 h-5 mr-2 inline" />
+                    添加导师
+                  </Button>
+                </motion.div>
               </div>
 
-              <div className="bg-dark-gray/50 border border-light-gray/10 rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-dark-gray">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-orbitron text-light-gray uppercase tracking-wider">姓名</th>
-                        <th className="px-6 py-4 text-left text-xs font-orbitron text-light-gray uppercase tracking-wider">职称</th>
-                        <th className="px-6 py-4 text-left text-xs font-orbitron text-light-gray uppercase tracking-wider">部门</th>
-                        <th className="px-6 py-4 text-left text-xs font-orbitron text-light-gray uppercase tracking-wider">研究方向</th>
-                        <th className="px-6 py-4 text-left text-xs font-orbitron text-light-gray uppercase tracking-wider">学生数</th>
-                        <th className="px-6 py-4 text-left text-xs font-orbitron text-light-gray uppercase tracking-wider">操作</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-light-gray/10">
-                      {filteredMentors.map((mentor) => (
-                        <tr key={mentor.id} className="hover:bg-light-gray/5 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="w-10 h-10 bg-electric-blue/20 rounded-full flex items-center justify-center text-electric-blue font-semibold">
-                                {mentor.name.charAt(0)}
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-white font-medium">{mentor.name}</div>
-                                <div className="text-light-gray text-sm">{mentor.email}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-white">{mentor.title}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-white">{mentor.department}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-wrap gap-1">
-                              {mentor.researchArea.map((area, idx) => (
-                              <span key={idx} className="px-2 py-1 bg-electric-blue/20 text-electric-blue text-xs rounded">
-                                {area}
-                              </span>
-                            ))}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-white">{mentor.studentCount}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => {
-                                  setSelectedMentor(mentor);
-                                  setShowEditModal(true);
-                                }}
-                                className="text-electric-blue hover:text-electric-blue/80 mr-3"
-                              >
-                                编辑
-                              </button>
-                              <button
-                                onClick={() => handleDeleteMentor(mentor.id)}
-                                className="text-red-400 hover:text-red-300"
-                              >
-                                删除
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              {/* 导师列表 */}
+              <div className="grid grid-cols-1 gap-4">
+                {filteredMentors.map((mentor, index) => (
+                  <motion.div
+                    key={mentor.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...springConfig, delay: index * 0.05 }}
+                  >
+                    <Card className="p-6 glass-strong hover:border-electric-blue/30 transition-all">
+                      <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          transition={springConfig}
+                          className="w-16 h-16 rounded-full bg-gradient-to-br from-electric-blue to-neon-cyan flex items-center justify-center flex-shrink-0"
+                        >
+                          <FiUser className="w-8 h-8 text-white" />
+                        </motion.div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                            <h3 className="text-xl font-bold text-white">{mentor.name}</h3>
+                            <span className="px-3 py-1 bg-electric-blue/20 text-electric-blue rounded-full text-sm border border-electric-blue/30">
+                              {mentor.title}
+                            </span>
+                          </div>
+                          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
+                            <p className="text-gray-400">
+                              <FiBriefcase className="w-4 h-4 inline mr-1" />
+                              {mentor.department || '-'}
+                            </p>
+                            <p className="text-gray-400">
+                              <FiMail className="w-4 h-4 inline mr-1" />
+                              {mentor.email || '-'}
+                            </p>
+                            <p className="text-gray-400">
+                              <FiPhone className="w-4 h-4 inline mr-1" />
+                              {mentor.phone || '-'}
+                            </p>
+                            <p className="text-gray-400">
+                              <FiUsers className="w-4 h-4 inline mr-1" />
+                              学生数: {mentor.student_count || 0}
+                            </p>
+                          </div>
+                          {mentor.research_direction && (
+                            <p className="mt-2 text-gray-400 text-sm">
+                              <span className="text-electric-blue">研究方向:</span> {mentor.research_direction}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditModal(mentor)}
+                              className="border-white/20"
+                            >
+                              <FiEdit className="w-4 h-4" />
+                            </Button>
+                          </motion.div>
+                          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openPasswordModal(mentor)}
+                              className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
+                              title="修改密码"
+                            >
+                              <FiLock className="w-4 h-4" />
+                            </Button>
+                          </motion.div>
+                          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openDeleteModal(mentor.id)}
+                              className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                            >
+                              <FiTrash2 className="w-4 h-4" />
+                            </Button>
+                          </motion.div>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+                {filteredMentors.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={springConfig}
+                  >
+                    <Card className="p-12 text-center glass-strong">
+                      <FiUsers className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                      <h3 className="text-xl font-bold text-gray-400 mb-2">暂无导师</h3>
+                      <p className="text-gray-500">点击上方"添加导师"按钮来创建新的导师账号</p>
+                    </Card>
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           )}
@@ -399,107 +303,376 @@ const MentorManagement: React.FC = () => {
         
         <Footer />
 
+        {/* 添加导师模态框 */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-deep-space border border-light-gray/20 rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-xl font-orbitron font-semibold text-electric-blue mb-4">添加导师</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">姓名</label>
-                  <input type="text" className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" placeholder="请输入姓名" />
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={springConfig}
+              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <Card className="p-6 glass-strong">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold text-white font-orbitron">添加新导师</h3>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <FiX className="w-6 h-6" />
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">职称</label>
-                  <input type="text" className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" placeholder="请输入职称" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">用户名 *</label>
+                    <input
+                      type="text"
+                      value={newMentor.username}
+                      onChange={(e) => setNewMentor({...newMentor, username: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                      placeholder="登录用户名"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">密码 *</label>
+                    <input
+                      type="password"
+                      value={newMentor.password}
+                      onChange={(e) => setNewMentor({...newMentor, password: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                      placeholder="登录密码"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">姓名 *</label>
+                    <input
+                      type="text"
+                      value={newMentor.name}
+                      onChange={(e) => setNewMentor({...newMentor, name: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                      placeholder="导师姓名"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">职称</label>
+                    <select
+                      value={newMentor.title}
+                      onChange={(e) => setNewMentor({...newMentor, title: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-blue/50"
+                    >
+                      <option value="">请选择职称</option>
+                      <option value="教授">教授</option>
+                      <option value="副教授">副教授</option>
+                      <option value="讲师">讲师</option>
+                      <option value="研究员">研究员</option>
+                      <option value="副研究员">副研究员</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">院系</label>
+                    <input
+                      type="text"
+                      value={newMentor.department}
+                      onChange={(e) => setNewMentor({...newMentor, department: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                      placeholder="所属院系"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">邮箱</label>
+                    <input
+                      type="email"
+                      value={newMentor.email}
+                      onChange={(e) => setNewMentor({...newMentor, email: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                      placeholder="邮箱地址"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">电话</label>
+                    <input
+                      type="text"
+                      value={newMentor.phone}
+                      onChange={(e) => setNewMentor({...newMentor, phone: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                      placeholder="联系电话"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-400 mb-2">研究方向</label>
+                    <input
+                      type="text"
+                      value={newMentor.research_direction}
+                      onChange={(e) => setNewMentor({...newMentor, research_direction: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                      placeholder="研究方向"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">部门</label>
-                  <input type="text" className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" placeholder="请输入部门" />
+                <div className="flex gap-3 mt-6 justify-end">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAddModal(false)}
+                      className="border-white/20"
+                    >
+                      取消
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={handleAddMentor}
+                      className="bg-gradient-to-r from-electric-blue to-neon-cyan hover:from-electric-blue/90 hover:to-neon-cyan/90 border-0"
+                    >
+                      <FiSave className="w-4 h-4 mr-2" />
+                      保存
+                    </Button>
+                  </motion.div>
                 </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">研究方向（逗号分隔）</label>
-                  <input type="text" className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" placeholder="请输入研究方向" />
-                </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">邮箱</label>
-                  <input type="email" className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" placeholder="请输入邮箱" />
-                </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">电话</label>
-                  <input type="tel" className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" placeholder="请输入电话" />
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-light-gray hover:text-white transition-colors"
-                >
-                  取消
-                </button>
-                <button
-                  onClick={handleAddMentor}
-                  className="px-4 py-2 bg-electric-blue text-deep-space rounded-lg hover:bg-electric-blue/80 transition-colors"
-                >
-                  确定
-                </button>
-              </div>
-            </div>
+              </Card>
+            </motion.div>
           </div>
         )}
 
-        {showEditModal && selectedMentor && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-deep-space border border-light-gray/20 rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-xl font-orbitron font-semibold text-electric-blue mb-4">编辑导师</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">姓名</label>
-                  <input type="text" defaultValue={selectedMentor.name} className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" />
+        {/* 编辑导师模态框 */}
+        {showEditModal && editingMentor && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={springConfig}
+              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <Card className="p-6 glass-strong">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold text-white font-orbitron">编辑导师信息</h3>
+                  <button
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditingMentor(null);
+                    }}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <FiX className="w-6 h-6" />
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">职称</label>
-                  <input type="text" defaultValue={selectedMentor.title} className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">姓名</label>
+                    <input
+                      type="text"
+                      value={editingMentor.name || ''}
+                      onChange={(e) => setEditingMentor({...editingMentor, name: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">职称</label>
+                    <select
+                      value={editingMentor.title || ''}
+                      onChange={(e) => setEditingMentor({...editingMentor, title: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-blue/50"
+                    >
+                      <option value="">请选择职称</option>
+                      <option value="教授">教授</option>
+                      <option value="副教授">副教授</option>
+                      <option value="讲师">讲师</option>
+                      <option value="研究员">研究员</option>
+                      <option value="副研究员">副研究员</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">院系</label>
+                    <input
+                      type="text"
+                      value={editingMentor.department || ''}
+                      onChange={(e) => setEditingMentor({...editingMentor, department: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">邮箱</label>
+                    <input
+                      type="email"
+                      value={editingMentor.email || ''}
+                      onChange={(e) => setEditingMentor({...editingMentor, email: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">电话</label>
+                    <input
+                      type="text"
+                      value={editingMentor.phone || ''}
+                      onChange={(e) => setEditingMentor({...editingMentor, phone: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-400 mb-2">研究方向</label>
+                    <input
+                      type="text"
+                      value={editingMentor.research_direction || ''}
+                      onChange={(e) => setEditingMentor({...editingMentor, research_direction: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">部门</label>
-                  <input type="text" defaultValue={selectedMentor.department} className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" />
+                <div className="flex gap-3 mt-6 justify-end">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowEditModal(false);
+                        setEditingMentor(null);
+                      }}
+                      className="border-white/20"
+                    >
+                      取消
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={handleEditMentor}
+                      className="bg-gradient-to-r from-electric-blue to-neon-cyan hover:from-electric-blue/90 hover:to-neon-cyan/90 border-0"
+                    >
+                      <FiSave className="w-4 h-4 mr-2" />
+                      保存
+                    </Button>
+                  </motion.div>
                 </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">邮箱</label>
-                  <input type="email" defaultValue={selectedMentor.email} className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" />
+              </Card>
+            </motion.div>
+          </div>
+        )}
+
+        {/* 修改密码模态框 */}
+        {showPasswordModal && editingMentor && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={springConfig}
+              className="w-full max-w-md"
+            >
+              <Card className="p-6 glass-strong">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold text-white font-orbitron">修改密码</h3>
+                  <button
+                    onClick={() => {
+                      setShowPasswordModal(false);
+                      setEditingMentor(null);
+                      setNewPassword('');
+                    }}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <FiX className="w-6 h-6" />
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">电话</label>
-                  <input type="tel" defaultValue={selectedMentor.phone} className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white" />
+                <div className="mb-4">
+                  <p className="text-gray-400 mb-4">
+                    正在为 <span className="text-white font-semibold">{editingMentor.name}</span> 修改密码
+                  </p>
+                  <label className="block text-sm text-gray-400 mb-2">新密码 *</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-electric-blue/50"
+                    placeholder="请输入新密码（至少6位）"
+                  />
                 </div>
-              </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    setShowEditModal(false);
-                    setSelectedMentor(null);
-                  }}
-                  className="px-4 py-2 text-light-gray hover:text-white transition-colors"
-                >
-                  取消
-                </button>
-                <button
-                  onClick={handleEditMentor}
-                  className="px-4 py-2 bg-electric-blue text-deep-space rounded-lg hover:bg-electric-blue/80 transition-colors"
-                >
-                  保存
-                </button>
-              </div>
-            </div>
+                <div className="flex gap-3 mt-6 justify-end">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowPasswordModal(false);
+                        setEditingMentor(null);
+                        setNewPassword('');
+                      }}
+                      className="border-white/20"
+                    >
+                      取消
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={handleUpdatePassword}
+                      className="bg-gradient-to-r from-electric-blue to-neon-cyan hover:from-electric-blue/90 hover:to-neon-cyan/90 border-0"
+                    >
+                      <FiSave className="w-4 h-4 mr-2" />
+                      保存
+                    </Button>
+                  </motion.div>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+        )}
+
+        {/* 删除确认模态框 */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={springConfig}
+              className="w-full max-w-md"
+            >
+              <Card className="p-6 glass-strong">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold text-white font-orbitron">确认删除</h3>
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setDeletingMentorId(null);
+                    }}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <FiX className="w-6 h-6" />
+                  </button>
+                </div>
+                <div className="mb-6">
+                  <p className="text-gray-400">
+                    确定要删除这位导师吗？此操作不可恢复。
+                  </p>
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowDeleteModal(false);
+                        setDeletingMentorId(null);
+                      }}
+                      className="border-white/20"
+                    >
+                      取消
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={handleDeleteMentor}
+                      className="bg-red-500 hover:bg-red-600 border-0"
+                    >
+                      <FiTrash2 className="w-4 h-4 mr-2" />
+                      删除
+                    </Button>
+                  </motion.div>
+                </div>
+              </Card>
+            </motion.div>
           </div>
         )}
       </div>
     );
   }
 
+  // 导师视图 - 显示自己的学生
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header title="导师中心" subtitle="管理您的学生、项目和成果" />
+    <div className="min-h-screen flex flex-col bg-deep-space">
+      <Header title="我的学生" subtitle="管理您的指导学生" />
       
       <div className="flex-1 container mx-auto px-4 py-8">
         {loading ? (
@@ -507,267 +680,82 @@ const MentorManagement: React.FC = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-electric-blue"></div>
           </div>
         ) : (
-          <div className="space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="bg-dark-gray/50 border border-light-gray/10 rounded-lg p-6"
-            >
-              <h3 className="text-xl font-orbitron font-semibold text-electric-blue mb-6">
-                个人信息
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">姓名</label>
-                  <p className="text-white">{mentorData.name}</p>
-                </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">职称</label>
-                  <p className="text-white">{mentorData.title}</p>
-                </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">所属部门</label>
-                  <p className="text-white">{mentorData.department}</p>
-                </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">研究方向</label>
-                  <div className="flex flex-wrap gap-2">
-                    {mentorData.researchArea.map((area, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-electric-blue/20 text-electric-blue text-xs rounded-full"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="grid grid-cols-1 gap-4">
+              {myStudents.map((student, index) => (
+                <motion.div
+                  key={student.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ ...springConfig, delay: index * 0.05 }}
+                >
+                  <Card className="p-6 glass-strong">
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        transition={springConfig}
+                        className="w-16 h-16 rounded-full bg-gradient-to-br from-electric-blue to-neon-cyan flex items-center justify-center flex-shrink-0"
                       >
-                        {area}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">联系电话</label>
-                  <p className="text-white">{mentorData.contactInfo.phone}</p>
-                </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">电子邮箱</label>
-                  <p className="text-white">{mentorData.contactInfo.email}</p>
-                </div>
-                <div>
-                  <label className="block text-light-gray text-sm mb-1">办公室</label>
-                  <p className="text-white">{mentorData.contactInfo.office}</p>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-dark-gray/50 border border-light-gray/10 rounded-lg p-6"
-            >
-              <h3 className="text-xl font-orbitron font-semibold text-electric-blue mb-6">
-                指导学生 ({students.length})
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {students.map((student) => (
-                  <div
-                    key={student.id}
-                    className="bg-dark-gray border border-light-gray/10 rounded-lg p-4 hover:border-electric-blue transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-semibold text-white">{student.name}</h4>
-                        <p className="text-light-gray text-sm">{student.studentId}</p>
-                      </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${getStudentTypeColor(student.studentType)}`}>
-                        {getStudentTypeName(student.studentType)}
-                      </span>
-                    </div>
-                    <p className="text-light-gray text-sm mb-2">{student.major} · {student.grade}</p>
-                    <p className="text-light-gray text-sm mb-2">研究方向: {student.researchArea}</p>
-                    <p className="text-light-gray text-xs">{student.email}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-dark-gray/50 border border-light-gray/10 rounded-lg p-6"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-orbitron font-semibold text-electric-blue">
-                  负责项目 ({projects.length})
-                </h3>
-              </div>
-              <div className="space-y-4">
-                {projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="bg-dark-gray border border-light-gray/10 rounded-lg p-4 hover:border-electric-blue transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <h4 className="font-semibold text-white">{project.title}</h4>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(project.status)}`}>
-                          {getStatusText(project.status)}
-                        </span>
-                        <button
-                          onClick={() => {
-                            setSelectedProject(project);
-                            setShowProjectModal(true);
-                          }}
-                          className="text-electric-blue text-sm hover:underline"
-                        >
-                          更新进度
-                        </button>
+                        <FiUser className="w-8 h-8 text-white" />
+                      </motion.div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                          <h3 className="text-xl font-bold text-white">{student.name}</h3>
+                          <span className="px-3 py-1 bg-electric-blue/20 text-electric-blue rounded-full text-sm border border-electric-blue/30">
+                            学号: {student.student_no}
+                          </span>
+                        </div>
+                        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
+                          <p className="text-gray-400">
+                            <FiBook className="w-4 h-4 inline mr-1" />
+                            {student.major || '-'}
+                          </p>
+                          <p className="text-gray-400">
+                            <FiCalendar className="w-4 h-4 inline mr-1" />
+                            {student.grade || '-'}
+                          </p>
+                          <p className="text-gray-400">
+                            <FiUser className="w-4 h-4 inline mr-1" />
+                            {student.gender || '-'}
+                          </p>
+                          <p className="text-gray-400">
+                            <FiUsers className="w-4 h-4 inline mr-1" />
+                            {student.student_type || '-'}
+                          </p>
+                        </div>
+                        {student.research_topic && (
+                          <p className="mt-2 text-gray-400 text-sm">
+                            <span className="text-electric-blue">研究课题:</span> {student.research_topic}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <p className="text-light-gray text-sm mb-3">{project.description}</p>
-                    <div className="mb-3">
-                      <div className="flex justify-between text-sm text-light-gray mb-1">
-                        <span>项目进度</span>
-                        <span>{project.progress}%</span>
-                      </div>
-                      <div className="w-full bg-light-gray/20 rounded-full h-2">
-                        <div
-                          className="bg-electric-blue h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${project.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-4 text-light-gray text-xs">
-                      <span>开始: {project.startDate}</span>
-                      {project.endDate && <span>结束: {project.endDate}</span>}
-                      <span>学生: {project.students.join(', ')}</span>
-                      <span>经费: {project.funding}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-dark-gray/50 border border-light-gray/10 rounded-lg p-6"
-            >
-              <h3 className="text-xl font-orbitron font-semibold text-electric-blue mb-6">
-                主要成果
-              </h3>
-              <div className="space-y-4">
-                {achievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className="flex items-start gap-4 bg-dark-gray border border-light-gray/10 rounded-lg p-4"
-                  >
-                    <div className="text-3xl">{getTypeIcon(achievement.type)}</div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-semibold text-white">{achievement.title}</h4>
-                        <span className="text-light-gray text-sm">{achievement.date}</span>
-                      </div>
-                      <p className="text-light-gray text-sm mt-1">{achievement.venue}</p>
-                      <p className="text-light-gray text-sm mt-1">作者: {achievement.authors.join(', ')}</p>
-                      <p className="text-light-gray text-xs mt-1">{achievement.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
+                  </Card>
+                </motion.div>
+              ))}
+              {myStudents.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={springConfig}
+                >
+                  <Card className="p-12 text-center glass-strong">
+                    <FiUsers className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-400 mb-2">暂无学生</h3>
+                    <p className="text-gray-500">您还没有指导学生</p>
+                  </Card>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
         )}
       </div>
       
       <Footer />
-
-      <div className="fixed bottom-6 right-6">
-        {showFloatingMenu && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="absolute bottom-16 right-0 flex flex-col gap-2"
-          >
-            <button
-              onClick={() => {
-                alert('发送文件给学生功能');
-                setShowFloatingMenu(false);
-              }}
-              className="bg-dark-gray border border-light-gray/20 px-4 py-2 rounded-lg text-white hover:border-electric-blue transition-colors whitespace-nowrap"
-            >
-              📤 发送文件
-            </button>
-            <button
-              onClick={() => {
-                alert('添加新项目功能');
-                setShowFloatingMenu(false);
-              }}
-              className="bg-dark-gray border border-light-gray/20 px-4 py-2 rounded-lg text-white hover:border-electric-blue transition-colors whitespace-nowrap"
-            >
-              ➕ 添加项目
-            </button>
-          </motion.div>
-        )}
-        <button
-          onClick={() => setShowFloatingMenu(!showFloatingMenu)}
-          className="w-14 h-14 bg-electric-blue text-deep-space rounded-full flex items-center justify-center text-2xl shadow-lg hover:bg-electric-blue/80 transition-colors"
-        >
-          {showFloatingMenu ? '✕' : '+'}
-        </button>
-      </div>
-
-      {showProjectModal && selectedProject && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-deep-space border border-light-gray/20 rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-xl font-orbitron font-semibold text-electric-blue mb-4">
-              更新项目进度
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-light-gray text-sm mb-1">项目名称</label>
-                <p className="text-white">{selectedProject.title}</p>
-              </div>
-              <div>
-                <label className="block text-light-gray text-sm mb-1">项目进度 (%)</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  defaultValue={selectedProject.progress}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-light-gray text-sm mb-1">备注</label>
-                <textarea
-                  className="w-full bg-dark-gray border border-light-gray/20 rounded-lg px-4 py-2 text-white"
-                  rows={3}
-                  placeholder="添加项目备注..."
-                ></textarea>
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowProjectModal(false);
-                  setSelectedProject(null);
-                }}
-                className="px-4 py-2 text-light-gray hover:text-white transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleUpdateProject}
-                className="px-4 py-2 bg-electric-blue text-deep-space rounded-lg hover:bg-electric-blue/80 transition-colors"
-              >
-                保存
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

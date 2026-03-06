@@ -27,6 +27,10 @@ const NotesPage: React.FC = () => {
     is_private: true
   });
   const [error, setError] = useState<string | null>(null);
+  
+  // 删除确认模态框状态
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   useEffect(() => {
     loadNotes();
@@ -92,11 +96,22 @@ const NotesPage: React.FC = () => {
     setShowAddModal(true);
   };
 
-  const handleDeleteNote = async (id: string) => {
-    if (!confirm('确定要删除这个笔记吗？')) return;
+  const openDeleteModal = (id: string) => {
+    setDeletingNoteId(id);
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setDeletingNoteId(null);
+  };
+
+  const handleDeleteNote = async () => {
+    if (!deletingNoteId) return;
     try {
-      await noteApi.deleteNote(id);
-      loadNotes();
+      await noteApi.deleteNote(deletingNoteId);
+      setNotes(prev => prev.filter(n => n.id !== deletingNoteId));
+      closeDeleteModal();
     } catch (error) {
       console.error('Failed to delete note:', error);
     }
@@ -109,12 +124,12 @@ const NotesPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex gradient-bg particle-bg">
-      <Sidebar type="student" />
-      
-      <div className="flex-1 flex flex-col min-h-screen">
-        <Header title="个人笔记" subtitle="记录您的学习心得和灵感" />
-        
+    <div className="min-h-screen flex flex-col gradient-bg particle-bg">
+      <Header showNavbar={true} />
+
+      <div className="flex-1 flex pt-20">
+        <Sidebar type="student" />
+
         <main className="flex-1 container mx-auto px-6 py-8">
           <Card className="p-6 mb-6 glass">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -186,7 +201,7 @@ const NotesPage: React.FC = () => {
                           <FiEdit3 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteNote(note.id)}
+                          onClick={() => openDeleteModal(note.id)}
                           className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-red-400"
                         >
                           <FiTrash2 className="w-4 h-4" />
@@ -350,8 +365,47 @@ const NotesPage: React.FC = () => {
           </div>
         )}
 
-        <Footer />
+        {/* 删除确认模态框 */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-md"
+            >
+              <Card className="p-6">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <FiTrash2 className="w-6 h-6 text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white font-orbitron">确认删除</h3>
+                    <p className="text-gray-400 text-sm mt-1">确定要删除这个笔记吗？此操作无法撤销。</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={closeDeleteModal}
+                    className="border-white/20"
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    onClick={handleDeleteNote}
+                    className="bg-red-500 hover:bg-red-600 border-0"
+                  >
+                    <FiTrash2 className="w-4 h-4 mr-2" />
+                    删除
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+        )}
+
       </div>
+      <Footer />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import Button from '../common/Button';
 
 interface LoginPageProps {
@@ -7,6 +8,7 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -180,12 +182,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <div className="text-center">
                 <p className="text-sm text-light-gray/70">
                   还没有账号?
-                  <a
-                    href="#"
+                  <button
+                    type="button"
+                    onClick={() => navigate('/register')}
                     className="ml-1 font-medium text-electric-blue hover:text-neon-cyan transition-colors"
                   >
                     注册新账号
-                  </a>
+                  </button>
                 </p>
               </div>
             </motion.form>

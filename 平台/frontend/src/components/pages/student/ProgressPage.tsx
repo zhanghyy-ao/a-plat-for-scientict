@@ -75,9 +75,27 @@ const ProgressPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 表单验证
+    if (!formData.title.trim()) {
+      alert('请输入进度标题');
+      return;
+    }
+    if (!formData.content.trim()) {
+      alert('请输入进度内容');
+      return;
+    }
+    
     try {
       setIsLoading(true);
-      await progressApi.createProgress(formData);
+      const dataToSubmit = {
+        ...formData,
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        problems: formData.problems?.trim() || '',
+        next_plan: formData.next_plan?.trim() || '',
+      };
+      await progressApi.createProgress(dataToSubmit);
       setShowSubmitForm(false);
       setFormData({
         title: '',
@@ -87,8 +105,9 @@ const ProgressPage: React.FC = () => {
         next_plan: '',
       });
       loadMyProgress();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to submit progress:', error);
+      alert(error.message || '提交失败，请重试');
     } finally {
       setIsLoading(false);
     }
@@ -131,10 +150,10 @@ const ProgressPage: React.FC = () => {
 
   if (isLoading && viewMode === 'list') {
     return (
-      <div className="min-h-screen flex gradient-bg particle-bg">
-        <Sidebar type="student" />
-        <div className="flex-1 flex flex-col min-h-screen">
-          <Header title="课题进度" subtitle="管理您的课题进度" />
+      <div className="min-h-screen flex flex-col gradient-bg particle-bg">
+        <Header showNavbar={true} />
+        <div className="flex-1 flex pt-20">
+          <Sidebar type="student" />
           <main className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-neon-purple border-t-transparent"></div>
@@ -148,10 +167,10 @@ const ProgressPage: React.FC = () => {
 
   if (viewMode === 'detail' && selectedProgress) {
     return (
-      <div className="min-h-screen flex gradient-bg particle-bg">
-        <Sidebar type="student" />
-        <div className="flex-1 flex flex-col min-h-screen">
-          <Header title="进度详情" subtitle="查看课题进度详情" />
+      <div className="min-h-screen flex flex-col gradient-bg particle-bg">
+        <Header showNavbar={true} />
+        <div className="flex-1 flex pt-20">
+          <Sidebar type="student" />
           <main className="flex-1 container mx-auto px-6 py-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -278,18 +297,18 @@ const ProgressPage: React.FC = () => {
               )}
             </motion.div>
         </main>
-        <Footer />
       </div>
+      <Footer />
     </div>
   );
   }
 
   if (viewMode === 'submit' || showSubmitForm) {
     return (
-      <div className="min-h-screen flex gradient-bg particle-bg">
-        <Sidebar type="student" />
-        <div className="flex-1 flex flex-col min-h-screen">
-          <Header title="提交进度" subtitle="提交新的课题进度汇报" />
+      <div className="min-h-screen flex flex-col gradient-bg particle-bg">
+        <Header showNavbar={true} />
+        <div className="flex-1 flex pt-20">
+          <Sidebar type="student" />
           <main className="flex-1 container mx-auto px-6 py-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -410,17 +429,17 @@ const ProgressPage: React.FC = () => {
               </Card>
             </motion.div>
         </main>
-        <Footer />
       </div>
+      <Footer />
     </div>
   );
   }
 
   return (
-    <div className="min-h-screen flex gradient-bg particle-bg">
-      <Sidebar type="student" />
-      <div className="flex-1 flex flex-col min-h-screen">
-        <Header title="课题进度" subtitle="管理您的课题进度" />
+    <div className="min-h-screen flex flex-col gradient-bg particle-bg">
+      <Header showNavbar={true} />
+      <div className="flex-1 flex pt-20">
+        <Sidebar type="student" />
         <main className="flex-1 container mx-auto px-6 py-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -519,10 +538,10 @@ const ProgressPage: React.FC = () => {
             )}
           </motion.div>
         </main>
-        <Footer />
       </div>
+      <Footer />
     </div>
   );
-};
+}
 
 export default ProgressPage;

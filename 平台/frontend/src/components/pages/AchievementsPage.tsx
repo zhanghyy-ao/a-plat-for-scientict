@@ -1,83 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../layout/Header';
 import Footer from '../layout/Footer';
 import AchievementCard from '../ui/AchievementCard';
 import DataVisualization from '../ui/DataVisualization';
 import { motion } from 'framer-motion';
+import { achievementApi } from '../../utils/api';
+
+interface Achievement {
+  id: string;
+  title: string;
+  type: 'paper' | 'project' | 'award' | 'patent';
+  authors: string[];
+  publish_date: string;
+  description: string;
+  link: string;
+}
 
 const AchievementsPage: React.FC = () => {
   const [activeType, setActiveType] = useState<'all' | 'paper' | 'project' | 'award' | 'patent'>('all');
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 模拟数据
-  const achievements = [
-    {
-      id: 1,
-      title: '基于深度学习的图像识别算法研究',
-      type: 'paper' as const,
-      authors: ['张三', '李四', '王五'],
-      date: '2026-01',
-      description: '提出了一种新的深度学习模型，在ImageNet数据集上取得了state-of-the-art的性能。',
-      link: '#',
-    },
-    {
-      id: 2,
-      title: '智能机器人控制系统开发',
-      type: 'project' as const,
-      authors: ['赵六', '钱七', '孙八'],
-      date: '2025-12',
-      description: '开发了一套基于强化学习的智能机器人控制系统，实现了自主导航和操作。',
-      link: '#',
-    },
-    {
-      id: 3,
-      title: '计算机视觉技术在医疗领域的应用',
-      type: 'award' as const,
-      authors: ['周九', '吴十'],
-      date: '2025-11',
-      description: '该项目获得了国家科技进步二等奖，为医疗诊断提供了新的技术手段。',
-      link: '#',
-    },
-    {
-      id: 4,
-      title: '一种基于区块链的安全数据共享方法',
-      type: 'patent' as const,
-      authors: ['郑一', '王二'],
-      date: '2025-10',
-      description: '提出了一种基于区块链技术的安全数据共享方法，保护用户隐私的同时实现数据流通。',
-      link: '#',
-    },
-    {
-      id: 5,
-      title: '大规模语言模型的轻量化研究',
-      type: 'paper' as const,
-      authors: ['张三', '赵六', '周九'],
-      date: '2025-09',
-      description: '提出了一种新的模型压缩方法，使大型语言模型在移动设备上高效运行。',
-      link: '#',
-    },
-    {
-      id: 6,
-      title: '智慧城市管理系统',
-      type: 'project' as const,
-      authors: ['李四', '钱七', '吴十'],
-      date: '2025-08',
-      description: '开发了一套智慧城市管理系统，实现了城市交通、环境、安全的智能化管理。',
-      link: '#',
-    },
-  ];
+  useEffect(() => {
+    loadAchievements();
+  }, []);
+
+  const loadAchievements = async () => {
+    try {
+      setLoading(true);
+      const data = await achievementApi.getAchievements();
+      setAchievements(data);
+    } catch (error) {
+      console.error('Failed to load achievements:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 过滤成果
   const filteredAchievements = activeType === 'all' 
     ? achievements 
     : achievements.filter(item => item.type === activeType);
 
+  // 计算统计数据
+  const paperCountByYear = achievements
+    .filter(a => a.type === 'paper')
+    .reduce((acc, paper) => {
+      const year = paper.publish_date?.substring(0, 4) || 'Unknown';
+      acc[year] = (acc[year] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const years = Object.keys(paperCountByYear).sort();
+  const paperCounts = years.map(year => paperCountByYear[year]);
+
   // 图表数据
   const paperData = {
-    labels: ['2021', '2022', '2023', '2024', '2025', '2026'],
+    labels: years.length > 0 ? years : ['2021', '2022', '2023', '2024', '2025'],
     datasets: [
       {
         label: '论文发表数量',
-        data: [5, 8, 12, 15, 18, 10],
+        data: paperCounts.length > 0 ? paperCounts : [0, 0, 0, 0, 0],
         borderColor: '#0066ff',
         backgroundColor: 'rgba(0, 102, 255, 0.1)',
         tension: 0.4,
@@ -85,12 +68,22 @@ const AchievementsPage: React.FC = () => {
     ],
   };
 
+  const projectCountByLevel = achievements
+    .filter(a => a.type === 'project')
+    .reduce((acc, project) => {
+      const level = (project as any).level || 'other';
+      acc[level] = (acc[level] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
   const projectData = {
-    labels: ['国家级', '省部级', '横向项目'],
+    labels: Object.keys(projectCountByLevel).length > 0 
+      ? Object.keys(projectCountByLevel).map(k => k === 'international' ? '国际级' : k === 'national' ? '国家级' : k === 'provincial' ? '省部级' : '其他')
+      : ['国家级', '省部级', '横向项目'],
     datasets: [
       {
         label: '项目数量',
-        data: [5, 12, 8],
+        data: Object.values(projectCountByLevel).length > 0 ? Object.values(projectCountByLevel) : [5, 12, 8],
         backgroundColor: ['#0066ff', '#00ffff', '#808080'],
       },
     ],
@@ -161,29 +154,37 @@ const AchievementsPage: React.FC = () => {
           </div>
 
           {/* 成果卡片 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredAchievements.map((achievement) => (
-              <AchievementCard
-                key={achievement.id}
-                title={achievement.title}
-                type={achievement.type}
-                authors={achievement.authors}
-                date={achievement.date}
-                description={achievement.description}
-                link={achievement.link}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-electric-blue"></div>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredAchievements.map((achievement) => (
+                  <AchievementCard
+                    key={achievement.id}
+                    title={achievement.title}
+                    type={achievement.type}
+                    authors={achievement.authors || []}
+                    date={achievement.publish_date?.substring(0, 7) || '-'}
+                    description={achievement.description}
+                    link={achievement.link || '#'}
+                  />
+                ))}
+              </div>
 
-          {/* 空状态 */}
-          {filteredAchievements.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20"
-            >
-              <p className="text-light-gray text-lg">暂无相关成果</p>
-            </motion.div>
+              {/* 空状态 */}
+              {filteredAchievements.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-20"
+                >
+                  <p className="text-light-gray text-lg">暂无相关成果</p>
+                </motion.div>
+              )}
+            </>
           )}
         </div>
       </section>

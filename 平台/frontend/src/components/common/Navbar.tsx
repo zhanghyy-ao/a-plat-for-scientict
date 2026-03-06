@@ -70,6 +70,13 @@ const Navbar: React.FC<NavbarProps> = ({ className = '' }) => {
                 <span className="font-rajdhani text-white">
                   {user?.username} ({user?.role === 'admin' ? '管理员' : user?.role === 'mentor' ? '导师' : '学生'})
                 </span>
+                {/* 消息中心 - 所有登录用户可见 */}
+                <NavLink
+                  to="/messages"
+                  className="font-rajdhani font-medium transition-colors text-white hover:text-electric-blue"
+                >
+                  消息中心
+                </NavLink>
                 {(user?.role === 'admin' || user?.role === 'student') && (
                   <NavLink
                     to={user?.role === 'admin' ? '/student-management' : '/student-hub'}

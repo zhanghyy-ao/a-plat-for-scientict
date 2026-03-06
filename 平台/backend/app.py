@@ -344,7 +344,13 @@ def token_required(f):
         except:
             return {'message': 'Token is invalid'}, 401
         
-        return f(current_user, *args, **kwargs)
+        # 检查是否是类方法（第一个参数是self，且是Resource的子类实例）
+        if args and hasattr(args[0], 'dispatch_request'):
+            # 是类方法，保持self作为第一个参数，current_user作为第二个
+            return f(args[0], current_user, *args[1:], **kwargs)
+        else:
+            # 是普通函数，current_user作为第一个参数
+            return f(current_user, *args, **kwargs)
     return decorated
 
 ns_auth = api.namespace('auth', description='认证管理')
@@ -1028,6 +1034,183 @@ class MyPendingProgress(Resource):
                 'created_at': p.created_at.isoformat()
             })
         return result
+
+@ns_my.route('/mentor')
+class MyMentor(Resource):
+    @token_required
+    def get(self, current_user):
+        """获取当前学生的导师信息"""
+        if current_user.role != 'student':
+            return {'message': 'Only students can access this endpoint'}, 403
+        
+        student = current_user.student
+        if not student or not student.mentor_id:
+            return {'message': 'No mentor assigned'}, 404
+        
+        mentor = Mentor.query.get(student.mentor_id)
+        if not mentor:
+            return {'message': 'Mentor not found'}, 404
+        
+        return {
+            'id': mentor.id,
+            'user_id': mentor.user_id,
+            'name': mentor.name,
+            'title': mentor.title,
+            'department': mentor.department,
+            'research_direction': mentor.research_direction,
+            'bio': mentor.bio,
+            'email': mentor.user.email if mentor.user else None,
+            'phone': mentor.user.phone if mentor.user else None,
+        }
+
+@ns_my.route('/profile')
+class MyProfile(Resource):
+    @token_required
+    def get(self, current_user):
+        """获取当前用户的个人资料"""
+        if current_user.role == 'mentor':
+            mentor = current_user.mentor
+            if not mentor:
+                return {'message': 'Mentor profile not found'}, 404
+            
+            # 获取学生数量
+            student_count = Student.query.filter_by(mentor_id=mentor.id).count()
+            
+            return {
+                'id': mentor.id,
+                'user_id': mentor.user_id,
+                'name': mentor.name,
+                'title': mentor.title,
+                'department': mentor.department,
+                'research_direction': mentor.research_direction,
+                'bio': mentor.bio,
+                'email': current_user.email,
+                'phone': current_user.phone,
+                'student_count': student_count,
+                'created_at': mentor.created_at.isoformat()
+            }
+        elif current_user.role == 'student':
+            student = current_user.student
+            if not student:
+                return {'message': 'Student profile not found'}, 404
+            
+            return {
+                'id': student.id,
+                'user_id': student.user_id,
+                'mentor_id': student.mentor_id,
+                'name': student.name,
+                'student_no': student.student_no,
+                'gender': student.gender,
+                'grade': student.grade,
+                'student_type': student.student_type,
+                'major': student.major,
+                'research_topic': student.research_topic,
+                'enrollment_date': student.enrollment_date.isoformat() if student.enrollment_date else None,
+                'email': current_user.email,
+                'phone': current_user.phone,
+                'created_at': student.created_at.isoformat()
+            }
+        else:
+            return {
+                'id': current_user.id,
+                'username': current_user.username,
+                'role': current_user.role,
+                'email': current_user.email,
+                'phone': current_user.phone,
+                'created_at': current_user.created_at.isoformat()
+            }
+
+    @token_required
+    def put(self, current_user):
+        """更新当前用户的个人资料"""
+        data = request.json
+        
+        if current_user.role == 'mentor':
+            mentor = current_user.mentor
+            if not mentor:
+                return {'message': 'Mentor profile not found'}, 404
+            
+            # 更新导师信息
+            if 'name' in data:
+                mentor.name = data['name']
+            if 'title' in data:
+                mentor.title = data['title']
+            if 'department' in data:
+                mentor.department = data['department']
+            if 'research_direction' in data:
+                mentor.research_direction = data['research_direction']
+            if 'bio' in data:
+                mentor.bio = data['bio']
+            if 'email' in data:
+                current_user.email = data['email']
+            if 'phone' in data:
+                current_user.phone = data['phone']
+            
+            db.session.commit()
+            
+            return {
+                'id': mentor.id,
+                'user_id': mentor.user_id,
+                'name': mentor.name,
+                'title': mentor.title,
+                'department': mentor.department,
+                'research_direction': mentor.research_direction,
+                'bio': mentor.bio,
+                'email': current_user.email,
+                'phone': current_user.phone,
+                'created_at': mentor.created_at.isoformat()
+            }
+        elif current_user.role == 'student':
+            student = current_user.student
+            if not student:
+                return {'message': 'Student profile not found'}, 404
+            
+            # 更新学生信息
+            if 'name' in data:
+                student.name = data['name']
+            if 'gender' in data:
+                student.gender = data['gender']
+            if 'grade' in data:
+                student.grade = data['grade']
+            if 'major' in data:
+                student.major = data['major']
+            if 'research_topic' in data:
+                student.research_topic = data['research_topic']
+            if 'email' in data:
+                current_user.email = data['email']
+            if 'phone' in data:
+                current_user.phone = data['phone']
+            
+            db.session.commit()
+            
+            return {
+                'id': student.id,
+                'user_id': student.user_id,
+                'name': student.name,
+                'student_no': student.student_no,
+                'gender': student.gender,
+                'grade': student.grade,
+                'major': student.major,
+                'research_topic': student.research_topic,
+                'email': current_user.email,
+                'phone': current_user.phone,
+                'created_at': student.created_at.isoformat()
+            }
+        else:
+            if 'email' in data:
+                current_user.email = data['email']
+            if 'phone' in data:
+                current_user.phone = data['phone']
+            db.session.commit()
+            
+            return {
+                'id': current_user.id,
+                'username': current_user.username,
+                'role': current_user.role,
+                'email': current_user.email,
+                'phone': current_user.phone,
+                'created_at': current_user.created_at.isoformat()
+            }
 
 @ns_progress.route('/')
 class ProgressList(Resource):

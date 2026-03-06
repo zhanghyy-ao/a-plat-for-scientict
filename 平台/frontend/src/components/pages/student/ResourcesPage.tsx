@@ -135,12 +135,12 @@ const ResourcesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex gradient-bg particle-bg">
-      <Sidebar type="student" />
-      
-      <div className="flex-1 flex flex-col min-h-screen">
-        <Header title="学习资源库" subtitle="探索和共享优质学习资源" />
-        
+    <div className="min-h-screen flex flex-col gradient-bg particle-bg">
+      <Header showNavbar={true} />
+
+      <div className="flex-1 flex pt-20">
+        <Sidebar type="student" />
+
         <main className="flex-1 container mx-auto px-6 py-8">
           <Card className="p-6 mb-6 glass">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -429,8 +429,8 @@ const ResourcesPage: React.FC = () => {
           </div>
         )}
 
-        <Footer />
       </div>
+      <Footer />
     </div>
   );
 };
