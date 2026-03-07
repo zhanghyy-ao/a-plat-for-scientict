@@ -1,4 +1,36 @@
-const API_BASE_URL = 'http://localhost:5000';
+// 根据环境自动选择 API 地址
+const isGitHubPages = window.location.hostname.includes('github.io');
+
+// 配置你的本地服务器地址
+// 注意：需要使用你的电脑 IP 地址，或者使用内网穿透工具（如 ngrok）
+const LOCAL_SERVER_URL = 'http://localhost:5000';  // 本地开发
+const NETWORK_SERVER_URL = 'http://192.168.1.100:5000';  // 替换为你的局域网 IP
+
+// 如果你使用 ngrok 等内网穿透工具，请在这里配置
+const NGROK_URL = '';  // 例如: 'https://xxxx.ngrok-free.app'
+
+// 自动选择 API 地址
+function getApiBaseUrl(): string {
+  // 如果在本地开发环境
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return LOCAL_SERVER_URL;
+  }
+  
+  // 如果配置了 ngrok，优先使用
+  if (NGROK_URL && isGitHubPages) {
+    return NGROK_URL;
+  }
+  
+  // GitHub Pages 环境 - 使用局域网 IP（需要在同一网络）
+  if (isGitHubPages) {
+    // 这里需要你手动修改为你的电脑 IP 地址
+    return NETWORK_SERVER_URL;
+  }
+  
+  return LOCAL_SERVER_URL;
+}
+
+export const API_BASE_URL = getApiBaseUrl();
 
 let authToken: string | null = null;
 
@@ -37,12 +69,13 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     return response.json();
   } catch (error: any) {
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      throw new Error('无法连接到服务器，请检查后端服务是否运行 (http://localhost:5000)');
+      throw new Error('无法连接到服务器，请确保本地服务器已启动');
     }
     throw error;
   }
 }
 
+// ... 其他 API 函数保持不变
 export const authApi = {
   login: (username: string, password: string) =>
     request<any>('/auth/login', {

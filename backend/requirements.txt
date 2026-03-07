@@ -5,3 +5,4 @@ PyJWT
 Flask-SQLAlchemy
 python-dotenv
 passlib[bcrypt]
+gunicorn

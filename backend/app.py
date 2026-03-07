@@ -16,7 +16,20 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///lab_management.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-CORS(app)
+
+# 配置 CORS - 允许 GitHub Pages 和本地开发环境访问
+CORS(app, resources={
+    r"/.*": {
+        "origins": [
+            "http://localhost:*",
+            "https://localhost:*",
+            "https://zhanghyy-ao.github.io",
+            "https://*.github.io"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # 初始化数据库
 db = SQLAlchemy(app)
@@ -2400,5 +2413,9 @@ class MarkAllRead(Resource):
 def health_check():
     return jsonify({'status': 'ok'})
 
+# 生产环境入口点
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+    app.run(debug=debug, host='0.0.0.0', port=port)
