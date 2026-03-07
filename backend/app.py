@@ -16,7 +16,20 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///lab_management.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-CORS(app)
+
+# 配置 CORS - 允许 GitHub Pages 和本地开发环境访问
+CORS(app, resources={
+    r"/.*": {
+        "origins": [
+            "http://localhost:*",
+            "https://localhost:*",
+            "https://zhanghyy-ao.github.io",
+            "https://*.github.io"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # 初始化数据库
 db = SQLAlchemy(app)
