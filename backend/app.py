@@ -241,6 +241,110 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user = db.relationship('User', backref=db.backref('notifications', lazy=True, cascade='all, delete-orphan'))
 
+# ==================== v2.0 AI功能相关模型 ====================
+
+class AIConversation(db.Model):
+    """AI对话记录表"""
+    __tablename__ = 'ai_conversations'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    session_id = db.Column(db.String(100), nullable=False)
+    message_role = db.Column(db.String(20), nullable=False)  # user/assistant/system
+    message_content = db.Column(db.Text, nullable=False)
+    agent_type = db.Column(db.String(50))
+    tokens_used = db.Column(db.Integer)
+    response_time_ms = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship('User', backref=db.backref('ai_conversations', lazy=True, cascade='all, delete-orphan'))
+
+class AIUsageResult(db.Model):
+    """AI使用结果记录表（用于Admin查看）"""
+    __tablename__ = 'ai_usage_results'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    user_role = db.Column(db.String(20), nullable=False)  # admin/mentor/student
+    session_id = db.Column(db.String(100), nullable=False)
+    feature_type = db.Column(db.String(50), nullable=False)  # chat/writing/analysis/recommendation/search/image
+    agent_type = db.Column(db.String(50))
+    user_query = db.Column(db.Text, nullable=False)
+    ai_response = db.Column(db.Text, nullable=False)
+    prompt_tokens = db.Column(db.Integer, default=0)
+    completion_tokens = db.Column(db.Integer, default=0)
+    total_tokens = db.Column(db.Integer, default=0)
+    response_time_ms = db.Column(db.Integer)
+    model_name = db.Column(db.String(50))
+    is_success = db.Column(db.Boolean, default=True)
+    error_message = db.Column(db.Text)
+    user_feedback = db.Column(db.String(20), default='none')  # positive/negative/none
+    ip_address = db.Column(db.String(45))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship('User', backref=db.backref('ai_usage_results', lazy=True, cascade='all, delete-orphan'))
+
+class AIImageGeneration(db.Model):
+    """AI图像生成记录表"""
+    __tablename__ = 'ai_image_generations'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    session_id = db.Column(db.String(100))
+    prompt = db.Column(db.Text, nullable=False)
+    image_type = db.Column(db.String(50))  # chart/architecture/flowchart/model/concept/composite
+    generation_params = db.Column(db.JSON)
+    template_id = db.Column(db.Integer)
+    image_url = db.Column(db.String(500))
+    image_urls = db.Column(db.JSON)  # 多格式图像URL
+    edit_data = db.Column(db.JSON)  # 手动编辑数据
+    generation_method = db.Column(db.String(20))  # ai/template/code
+    model_used = db.Column(db.String(50))
+    tokens_used = db.Column(db.Integer)
+    status = db.Column(db.String(20), default='pending')  # pending/generating/completed/failed
+    is_favorite = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    user = db.relationship('User', backref=db.backref('ai_image_generations', lazy=True, cascade='all, delete-orphan'))
+
+class ImageTemplate(db.Model):
+    """图像模板表"""
+    __tablename__ = 'image_templates'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50), nullable=False)  # chart/architecture/flowchart/model/concept/composite
+    template_code = db.Column(db.Text)
+    default_data = db.Column(db.JSON)
+    preview_image_url = db.Column(db.String(500))
+    usage_count = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class UserAIProfile(db.Model):
+    """用户AI画像表"""
+    __tablename__ = 'user_ai_profiles'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), unique=True, nullable=False)
+    research_interests = db.Column(db.JSON)
+    skill_levels = db.Column(db.JSON)
+    learning_preferences = db.Column(db.JSON)
+    interaction_history = db.Column(db.JSON)
+    personalization_settings = db.Column(db.JSON)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    user = db.relationship('User', backref=db.backref('ai_profile', uselist=False))
+
+class KnowledgeDocument(db.Model):
+    """知识库文档表"""
+    __tablename__ = 'knowledge_documents'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String(500), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    content_type = db.Column(db.String(50))  # progress/resource/feedback/discussion/external
+    source_id = db.Column(db.Integer)
+    source_type = db.Column(db.String(50))
+    embedding_id = db.Column(db.String(100))
+    metadata = db.Column(db.JSON)
+    tags = db.Column(db.JSON)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    creator = db.relationship('User', backref=db.backref('knowledge_docs', lazy=True))
+
 # 创建数据库表
 with app.app_context():
     db.create_all()
@@ -2396,9 +2500,306 @@ class MarkAllRead(Resource):
         
         return {'message': 'All notifications marked as read'}
 
+# ==================== v2.0 AI功能API ====================
+
+@app.route('/api/ai/agents', methods=['GET'])
+@token_required
+def get_ai_agents(current_user):
+    """获取所有可用的AI智能体列表"""
+    from ai_agents.base_agent import AgentFactory
+    agents = AgentFactory.list_agents()
+    return jsonify({'agents': agents})
+
+@app.route('/api/ai/chat', methods=['POST'])
+@token_required
+def ai_chat(current_user):
+    """AI对话接口"""
+    from ai_agents.base_agent import AgentFactory
+    from ai_agents.usage_tracker import UsageTracker
+    import uuid
+    
+    data = request.get_json()
+    message = data.get('message', '')
+    agent_type = data.get('agent_type', 'research_assistant')
+    session_id = data.get('session_id', str(uuid.uuid4()))
+    stream = data.get('stream', False)
+    
+    if not message:
+        return jsonify({'error': 'Message is required'}), 400
+    
+    try:
+        # 获取Agent
+        agent = AgentFactory.get_agent(agent_type)
+        
+        # 执行对话
+        start_time = datetime.utcnow()
+        result = agent.chat(
+            message=message,
+            session_id=session_id,
+            user_id=current_user.id,
+            stream=stream
+        )
+        
+        # 记录使用
+        try:
+            tracker = UsageTracker(db.session)
+            tracker.log_usage(
+                user_id=current_user.id,
+                user_role=current_user.role,
+                session_id=session_id,
+                feature_type='chat',
+                agent_type=agent_type,
+                user_query=message,
+                ai_response=result.get('content', ''),
+                tokens_used=result.get('usage', {}),
+                response_time_ms=result.get('response_time_ms', 0),
+                model_name=result.get('model', 'unknown'),
+                is_success=True,
+                ip_address=request.remote_addr
+            )
+        except Exception as e:
+            print(f"记录AI使用失败: {e}")
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/writing/assist', methods=['POST'])
+@token_required
+def ai_writing_assist(current_user):
+    """AI写作辅助接口"""
+    from ai_agents.base_agent import AgentFactory
+    
+    data = request.get_json()
+    content = data.get('content', '')
+    writing_type = data.get('writing_type', 'general')
+    requirements = data.get('requirements', '')
+    
+    if not content:
+        return jsonify({'error': 'Content is required'}), 400
+    
+    try:
+        agent = AgentFactory.get_agent('research_assistant')
+        result = agent.assist_writing(
+            content=content,
+            writing_type=writing_type,
+            requirements=requirements
+        )
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/progress/analyze', methods=['POST'])
+@token_required
+def ai_analyze_progress(current_user):
+    """AI进度分析接口"""
+    from ai_agents.base_agent import AgentFactory
+    
+    data = request.get_json()
+    student_id = data.get('student_id')
+    
+    # 权限检查
+    if current_user.role == 'student':
+        student = Student.query.filter_by(user_id=current_user.id).first()
+        if not student or student.id != student_id:
+            return jsonify({'error': 'Permission denied'}), 403
+    elif current_user.role == 'mentor':
+        mentor = Mentor.query.filter_by(user_id=current_user.id).first()
+        student = Student.query.get(student_id)
+        if not student or student.mentor_id != mentor.id:
+            return jsonify({'error': 'Permission denied'}), 403
+    
+    try:
+        # 获取学生进度历史
+        progress_history = ProgressReport.query.filter_by(student_id=student_id).order_by(
+            ProgressReport.created_at.desc()
+        ).limit(10).all()
+        
+        progress_list = [{
+            'id': p.id,
+            'title': p.title,
+            'completion': p.completion,
+            'created_at': p.created_at.isoformat(),
+            'status': p.status
+        } for p in progress_history]
+        
+        agent = AgentFactory.get_agent('progress_analyst')
+        result = agent.analyze_progress(progress_list)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/learning/recommend', methods=['POST'])
+@token_required
+def ai_recommend_resources(current_user):
+    """AI学习资源推荐接口"""
+    from ai_agents.base_agent import AgentFactory
+    
+    data = request.get_json()
+    research_direction = data.get('research_direction', '')
+    skill_level = data.get('skill_level', 'intermediate')
+    interests = data.get('interests', [])
+    
+    try:
+        agent = AgentFactory.get_agent('learning_mentor')
+        result = agent.recommend_resources(
+            research_direction=research_direction,
+            skill_level=skill_level,
+            interests=interests
+        )
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ==================== Admin AI使用记录管理API ====================
+
+@app.route('/api/admin/ai-usage/records', methods=['GET'])
+@token_required
+def get_ai_usage_records(current_user):
+    """获取AI使用记录列表（Admin专用）"""
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    # 获取查询参数
+    page = request.args.get('page', 1, type=int)
+    page_size = request.args.get('page_size', 20, type=int)
+    user_id = request.args.get('user_id', type=int)
+    user_role = request.args.get('user_role')
+    feature_type = request.args.get('feature_type')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    keyword = request.args.get('keyword')
+    
+    query = AIUsageResult.query
+    
+    if user_id:
+        query = query.filter_by(user_id=user_id)
+    if user_role:
+        query = query.filter_by(user_role=user_role)
+    if feature_type:
+        query = query.filter_by(feature_type=feature_type)
+    if date_from:
+        query = query.filter(AIUsageResult.created_at >= date_from)
+    if date_to:
+        query = query.filter(AIUsageResult.created_at <= date_to)
+    if keyword:
+        query = query.filter(
+            db.or_(
+                AIUsageResult.user_query.contains(keyword),
+                AIUsageResult.ai_response.contains(keyword)
+            )
+        )
+    
+    total = query.count()
+    records = query.order_by(AIUsageResult.created_at.desc()).offset(
+        (page - 1) * page_size
+    ).limit(page_size).all()
+    
+    return jsonify({
+        'records': [{
+            'id': r.id,
+            'user_id': r.user_id,
+            'user_role': r.user_role,
+            'session_id': r.session_id,
+            'feature_type': r.feature_type,
+            'agent_type': r.agent_type,
+            'user_query': r.user_query[:200] + '...' if len(r.user_query) > 200 else r.user_query,
+            'total_tokens': r.total_tokens,
+            'response_time_ms': r.response_time_ms,
+            'model_name': r.model_name,
+            'is_success': r.is_success,
+            'user_feedback': r.user_feedback,
+            'created_at': r.created_at.isoformat()
+        } for r in records],
+        'total': total,
+        'page': page,
+        'page_size': page_size
+    })
+
+@app.route('/api/admin/ai-usage/records/<int:record_id>', methods=['GET'])
+@token_required
+def get_ai_usage_record_detail(current_user, record_id):
+    """获取AI使用记录详情（Admin专用）"""
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    record = AIUsageResult.query.get(record_id)
+    if not record:
+        return jsonify({'error': 'Record not found'}), 404
+    
+    return jsonify({
+        'id': record.id,
+        'user_id': record.user_id,
+        'user_role': record.user_role,
+        'session_id': record.session_id,
+        'feature_type': record.feature_type,
+        'agent_type': record.agent_type,
+        'user_query': record.user_query,
+        'ai_response': record.ai_response,
+        'prompt_tokens': record.prompt_tokens,
+        'completion_tokens': record.completion_tokens,
+        'total_tokens': record.total_tokens,
+        'response_time_ms': record.response_time_ms,
+        'model_name': record.model_name,
+        'is_success': record.is_success,
+        'error_message': record.error_message,
+        'user_feedback': record.user_feedback,
+        'ip_address': record.ip_address,
+        'created_at': record.created_at.isoformat()
+    })
+
+@app.route('/api/admin/ai-usage/statistics', methods=['GET'])
+@token_required
+def get_ai_usage_statistics(current_user):
+    """获取AI使用统计（Admin专用）"""
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    from ai_agents.usage_tracker import UsageTracker
+    
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    
+    tracker = UsageTracker(db.session)
+    stats = tracker.get_usage_stats(
+        date_from=date_from,
+        date_to=date_to
+    )
+    
+    return jsonify(stats)
+
+@app.route('/api/admin/ai-usage/dashboard', methods=['GET'])
+@token_required
+def get_ai_usage_dashboard(current_user):
+    """获取AI使用仪表盘数据（Admin专用）"""
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    from ai_agents.usage_tracker import UsageTracker
+    
+    tracker = UsageTracker(db.session)
+    dashboard_data = tracker.get_dashboard_data()
+    
+    return jsonify(dashboard_data)
+
+@app.route('/api/admin/ai-usage/llm-health', methods=['GET'])
+@token_required
+def get_llm_health_status(current_user):
+    """获取LLM服务健康状态（Admin专用）"""
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    from ai_agents.llm_service import get_llm_service
+    
+    llm_service = get_llm_service()
+    health_status = llm_service.check_health()
+    
+    return jsonify(health_status)
+
 @app.route('/health')
 def health_check():
-    return jsonify({'status': 'ok'})
+    return jsonify({'status': 'ok', 'version': '2.0.0', 'features': ['ai_agents', 'usage_tracking']})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

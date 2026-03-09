@@ -34,6 +34,8 @@ import TaskManagementPage from './components/pages/mentor/TaskManagementPage';
 import AppointmentManagementPage from './components/pages/mentor/AppointmentManagementPage';
 import NotificationPage from './components/pages/mentor/NotificationPage';
 import MessageCenter from './components/pages/MessageCenter';
+import AIChat from './components/ai/AIChat';
+import AIWritingAssistant from './components/ai/AIWritingAssistant';
 
 const AppContent: React.FC = () => {
   const { login } = useAuth();
@@ -132,6 +134,9 @@ const AppContent: React.FC = () => {
         <Route path="/student-hub" element={<EnhancedStudentHub />} />
         {/* 消息中心 - 新的即时通讯平台 */}
         <Route path="/messages" element={<MessageCenter />} />
+        {/* AI功能路由 - v2.0新增 */}
+        <Route path="/ai/chat" element={<AIChat />} />
+        <Route path="/ai/writing" element={<AIWritingAssistant />} />
       </Route>
     </Routes>
   );
