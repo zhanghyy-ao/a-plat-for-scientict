@@ -545,7 +545,7 @@ const AppointmentManagementPage: React.FC = () => {
                     <option value="">请选择学生</option>
                     {students.map(student => (
                       <option key={student.id} value={student.id}>
-                        {student.name} ({student.student_no})
+                        {student.name} ({student.studentNo})
                       </option>
                     ))}
                   </select>

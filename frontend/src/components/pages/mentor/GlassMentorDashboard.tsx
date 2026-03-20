@@ -238,7 +238,7 @@ const GlassMentorDashboard: React.FC = () => {
                       </motion.div>
                     )}
                   </div>
-                  <p className="text-white/60 text-sm font-rajdhani uppercase tracking-wider mb-2">新消息</p>
+                  <p className="text-white/60 text-sm font-rajdhani uppercase tracking-wider mb-1">新消息</p>
                   <p className="text-4xl font-bold font-orbitron text-white">{unreadMessages}</p>
                 </div>
               </motion.div>
@@ -335,7 +335,7 @@ const GlassMentorDashboard: React.FC = () => {
                             </motion.div>
                             <div className="flex-1">
                               <p className="font-semibold text-white text-lg mb-1">{student.name}</p>
-                              <p className="text-white/60 text-sm font-rajdhani">{student.student_no} · {student.grade}</p>
+                              <p className="text-white/60 text-sm font-rajdhani">{student.studentNo} · {student.grade}</p>
                             </div>
                             <FaCheckCircle className="text-emerald-400 text-2xl" />
                           </div>
@@ -387,7 +387,7 @@ const GlassMentorDashboard: React.FC = () => {
                             <p className="text-white/70 text-sm font-rajdhani mb-3">{progress.content}</p>
                           </div>
                           <span className="px-4 py-2 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-rajdhani font-semibold border border-yellow-500/30">
-                            待审阅
+                            待审核
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
@@ -395,7 +395,7 @@ const GlassMentorDashboard: React.FC = () => {
                             <FaClock className="text-sm" />
                             <span className="font-rajdhani">完成度：{progress.completion}%</span>
                           </div>
-                          <span className="text-white/50 text-sm font-rajdhani">{formatDate(progress.created_at)}</span>
+                          <span className="text-white/50 text-sm font-rajdhani">{formatDate(progress.createdAt)}</span>
                         </div>
                       </motion.div>
                     ))}
@@ -451,7 +451,7 @@ const GlassMentorDashboard: React.FC = () => {
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
                             : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                         }`}>
-                          {appointment.status === 'confirmed' ? '已确认' : '待确认'}
+                          {appointment.status === 'confirmed' ? '已确认' : '待确认' }
                         </span>
                       </motion.div>
                     ))}
@@ -489,10 +489,10 @@ const GlassMentorDashboard: React.FC = () => {
                         className="glass-light rounded-2xl p-6"
                       >
                         <h3 className="font-semibold text-white mb-3">{task.title}</h3>
-                        {task.due_date && (
+                        {task.dueDate && (
                           <p className="text-white/60 text-sm font-rajdhani mb-3">
                             <FaClock className="inline mr-2" />
-                            截止：{formatDate(task.due_date)}
+                            截止：{formatDate(task.dueDate)}
                           </p>
                         )}
                         <span className={`inline-block px-4 py-2 rounded-full text-xs font-rajdhani font-semibold ${
@@ -533,7 +533,7 @@ const GlassMentorDashboard: React.FC = () => {
                   to="/my-students"
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-8 py-4 rounded-2xl font-semibold hover:shadow-lg hover:shadow-blue-500/40 transition-all duration-300"
                 >
-                  开始指导 <FaArrowRight />
+                  开始指导<FaArrowRight />
                 </Link>
               </div>
             </motion.div>

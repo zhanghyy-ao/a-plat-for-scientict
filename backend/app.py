@@ -2,12 +2,14 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_restx import Api, Resource, fields
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
 from datetime import datetime, timedelta
 import jwt
 from functools import wraps
 import os
 from dotenv import load_dotenv
 from passlib.hash import bcrypt
+from ai.service import AIService
 
 # 加载环境变量
 load_dotenv()
@@ -121,7 +123,43 @@ class Achievement(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-class Todo(db.Model):
+class AIUsageLog(db.Model):
+    __tablename__ = 'ai_usage_log'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    feature = db.Column(db.String(100), nullable=False)
+    model = db.Column(db.String(100))
+    tokens_used = db.Column(db.Integer, default=0)
+    cost = db.Column(db.Float)
+    status = db.Column(db.String(50), default='success')
+    extra = db.Column(db.JSON)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('ai_usage_logs', lazy=True))
+
+
+class StudentAIConversation(db.Model):
+    __tablename__ = 'student_ai_conversation'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id', ondelete='CASCADE'), nullable=False)
+    title = db.Column(db.String(200))
+    status = db.Column(db.String(50), default='active')
+    last_activity_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    student = db.relationship('Student', backref=db.backref('ai_conversations', lazy=True, cascade='all, delete-orphan'))
+
+
+class StudentAIMessage(db.Model):
+    __tablename__ = 'student_ai_message'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('student_ai_conversation.id', ondelete='CASCADE'), nullable=False)
+    role = db.Column(db.String(20), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    extra = db.Column(db.JSON)
+    tokens_used = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
@@ -192,7 +230,16 @@ class Message(db.Model):
     sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy=True, cascade='all, delete-orphan'))
     receiver = db.relationship('User', foreign_keys=[receiver_id], backref=db.backref('received_messages', lazy=True, cascade='all, delete-orphan'))
 
-class Task(db.Model):
+class StudentAIMessage(db.Model):
+    __tablename__ = 'student_ai_message'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('student_ai_conversation.id', ondelete='CASCADE'), nullable=False)
+    role = db.Column(db.String(20), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    metadata = db.Column(db.JSON)
+    tokens_used = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     mentor_id = db.Column(db.Integer, db.ForeignKey('mentor.id', ondelete='CASCADE'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
@@ -370,7 +417,72 @@ ns_tasks = api.namespace('tasks', description='任务管理')
 ns_appointments = api.namespace('appointments', description='会面预约管理')
 ns_notifications = api.namespace('notifications', description='通知管理')
 
-login_model = api.model('Login', {
+
+def require_roles(current_user, allowed_roles):
+    if current_user.role not in allowed_roles:
+        api.abort(403, 'Insufficient permissions')
+
+
+def serialize_student(student):
+    return {
+        'id': student.id,
+        'user_id': student.user_id,
+        'mentor_id': student.mentor_id,
+        'name': student.name,
+        'student_no': student.student_no,
+        'gender': student.gender,
+        'grade': student.grade,
+        'student_type': student.student_type,
+        'major': student.major,
+        'research_topic': student.research_topic,
+        'enrollment_date': student.enrollment_date.isoformat() if student.enrollment_date else None,
+        'created_at': student.created_at.isoformat()
+    }
+
+
+def parse_date(value, field_name):
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except ValueError:
+        api.abort(400, f"Invalid {field_name} format, expected YYYY-MM-DD")
+
+
+def get_pagination_params(default_per_page=20, max_per_page=100):
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', default_per_page))
+    except ValueError:
+        api.abort(400, 'Invalid pagination parameters')
+    page = page if page > 0 else 1
+    if per_page <= 0:
+        per_page = default_per_page
+    per_page = min(per_page, max_per_page)
+    return page, per_page
+
+
+def paginate_query(query, page, per_page):
+    total = query.count()
+    items = query.offset((page - 1) * per_page).limit(per_page).all()
+    return items, total
+
+
+def can_contact_user(current_user, target_user_id):
+    if current_user.id == target_user_id or current_user.role == 'admin':
+        return True
+    if current_user.role == 'mentor':
+        mentor = current_user.mentor
+        if not mentor:
+            return False
+        return any(student.user_id == target_user_id for student in mentor.students)
+    if current_user.role == 'student':
+        student = current_user.student
+        if not student:
+            return False
+        if student.mentor and student.mentor.user_id == target_user_id:
+            return True
+    return False
     'username': fields.String(required=True),
     'password': fields.String(required=True)
 })
@@ -387,6 +499,10 @@ student_model = api.model('Student', {
     'id': fields.String(readonly=True),
     'user_id': fields.String,
     'mentor_id': fields.String,
+    'username': fields.String(required=True),
+    'password': fields.String,
+    'email': fields.String,
+    'phone': fields.String,
     'name': fields.String(required=True),
     'student_no': fields.String(required=True),
     'gender': fields.String,
@@ -566,77 +682,80 @@ class StudentList(Resource):
     @token_required
     def get(self, current_user):
         """获取所有学生列表"""
+        require_roles(current_user, ['admin', 'mentor'])
         mentor_id = request.args.get('mentor_id')
+        page, per_page = get_pagination_params()
+
         students = Student.query
-        if mentor_id:
+        if current_user.role == 'mentor':
+            if not current_user.mentor:
+                return {'items': [], 'total': 0, 'page': page, 'per_page': per_page}
+            students = students.filter_by(mentor_id=current_user.mentor.id)
+        elif mentor_id:
             students = students.filter_by(mentor_id=mentor_id)
-        students = students.all()
-        
-        result = []
-        for student in students:
-            result.append({
-                'id': student.id,
-                'user_id': student.user_id,
-                'mentor_id': student.mentor_id,
-                'name': student.name,
-                'student_no': student.student_no,
-                'gender': student.gender,
-                'grade': student.grade,
-                'student_type': student.student_type,
-                'major': student.major,
-                'research_topic': student.research_topic,
-                'enrollment_date': student.enrollment_date.isoformat() if student.enrollment_date else None,
-                'created_at': student.created_at.isoformat()
-            })
-        return result
+
+        students, total = paginate_query(students.order_by(Student.created_at.desc()), page, per_page)
+        return {
+            'items': [serialize_student(student) for student in students],
+            'total': total,
+            'page': page,
+            'per_page': per_page
+        }
 
     @token_required
     @ns_students.expect(student_model)
     def post(self, current_user):
         """创建新学生"""
-        data = request.json
-        
-        # 创建用户
-        user = User(
-            username=data.get('username'),
-            password=bcrypt.hash(data.get('password', '123456')),
-            role='student',
-            email=data.get('email'),
-            phone=data.get('phone')
-        )
-        db.session.add(user)
-        db.session.commit()
-        
-        # 创建学生信息
-        student = Student(
-            user_id=user.id,
-            mentor_id=data.get('mentor_id'),
-            name=data.get('name'),
-            student_no=data.get('student_no'),
-            gender=data.get('gender'),
-            grade=data.get('grade'),
-            student_type=data.get('student_type'),
-            major=data.get('major'),
-            research_topic=data.get('research_topic'),
-            enrollment_date=datetime.strptime(data.get('enrollment_date'), '%Y-%m-%d').date() if data.get('enrollment_date') else None
-        )
-        db.session.add(student)
-        db.session.commit()
-        
-        return {
-            'id': student.id,
-            'user_id': student.user_id,
-            'mentor_id': student.mentor_id,
-            'name': student.name,
-            'student_no': student.student_no,
-            'gender': student.gender,
-            'grade': student.grade,
-            'student_type': student.student_type,
-            'major': student.major,
-            'research_topic': student.research_topic,
-            'enrollment_date': student.enrollment_date.isoformat() if student.enrollment_date else None,
-            'created_at': student.created_at.isoformat()
-        }, 201
+        require_roles(current_user, ['admin'])
+        data = request.json or {}
+
+        username = data.get('username')
+        email = data.get('email')
+        student_no = data.get('student_no')
+        if not username or not student_no:
+            api.abort(400, 'username and student_no are required')
+        if User.query.filter_by(username=username).first():
+            api.abort(409, 'Username already exists')
+        if email and User.query.filter_by(email=email).first():
+            api.abort(409, 'Email already exists')
+        if student_no and Student.query.filter_by(student_no=student_no).first():
+            api.abort(409, 'Student number already exists')
+
+        mentor_id = data.get('mentor_id')
+        if mentor_id and not Mentor.query.get(mentor_id):
+            api.abort(404, f"Mentor with id {mentor_id} not found")
+
+        try:
+            user = User(
+                username=username,
+                password=bcrypt.hash(data.get('password', '123456')),
+                role='student',
+                email=email,
+                phone=data.get('phone')
+            )
+            db.session.add(user)
+            db.session.flush()
+
+            student = Student(
+                user_id=user.id,
+                mentor_id=mentor_id,
+                name=data.get('name'),
+                student_no=student_no,
+                gender=data.get('gender'),
+                grade=data.get('grade'),
+                student_type=data.get('student_type'),
+                major=data.get('major'),
+                research_topic=data.get('research_topic'),
+                enrollment_date=parse_date(data.get('enrollment_date'), 'enrollment_date')
+            )
+            db.session.add(student)
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            print(f"create student error: {exc}")
+            api.abort(500, 'Failed to create student')
+
+        return serialize_student(student), 201
 
 @ns_students.route('/<id>')
 class StudentDetail(Resource):
@@ -646,36 +765,63 @@ class StudentDetail(Resource):
         student = Student.query.get(id)
         if not student:
             api.abort(404, f"Student with id {id} not found")
-        
-        return {
-            'id': student.id,
-            'user_id': student.user_id,
-            'mentor_id': student.mentor_id,
-            'name': student.name,
-            'student_no': student.student_no,
-            'gender': student.gender,
-            'grade': student.grade,
-            'student_type': student.student_type,
-            'major': student.major,
-            'research_topic': student.research_topic,
-            'enrollment_date': student.enrollment_date.isoformat() if student.enrollment_date else None,
-            'created_at': student.created_at.isoformat()
-        }
+
+        # 权限校验：管理员任意访问；导师仅可访问本学生；学生仅可访问自身
+        if current_user.role == 'admin':
+            pass
+        elif current_user.role == 'mentor':
+            mentor_profile = current_user.mentor
+            if not mentor_profile or student.mentor_id != mentor_profile.id:
+                api.abort(403, 'Mentor cannot access this student')
+        elif current_user.role == 'student':
+            student_profile = current_user.student
+            if not student_profile or student_profile.id != student.id:
+                api.abort(403, 'Student cannot access this record')
+        else:
+            api.abort(403, 'Unsupported role')
+
+        return serialize_student(student)
 
     @token_required
     @ns_students.expect(student_model)
     def put(self, current_user, id):
         """更新学生信息"""
-        data = request.json
         student = Student.query.get(id)
         if not student:
             api.abort(404, f"Student with id {id} not found")
-        
-        # 更新学生信息
+
+        # 权限：管理员，或拥有该学生的导师，或学生本人
+        allowed = False
+        if current_user.role == 'admin':
+            allowed = True
+        elif current_user.role == 'mentor' and current_user.mentor and current_user.mentor.id == student.mentor_id:
+            allowed = True
+        elif current_user.role == 'student' and current_user.student and current_user.student.id == student.id:
+            allowed = True
+        if not allowed:
+            api.abort(403, 'Insufficient permissions to update student')
+
+        data = request.json or {}
+
+        # 唯一性校验
+        new_student_no = data.get('student_no')
+        if new_student_no and new_student_no != student.student_no:
+            if Student.query.filter_by(student_no=new_student_no).first():
+                api.abort(409, 'Student number already exists')
+            student.student_no = new_student_no
+
+        # 允许管理员更新关联用户信息
+        if current_user.role == 'admin':
+            new_email = data.get('email')
+            if new_email and new_email != student.user.email:
+                if User.query.filter(User.email == new_email, User.id != student.user_id).first():
+                    api.abort(409, 'Email already exists')
+                student.user.email = new_email
+            if 'phone' in data:
+                student.user.phone = data.get('phone')
+
         if 'name' in data:
             student.name = data['name']
-        if 'student_no' in data:
-            student.student_no = data['student_no']
         if 'gender' in data:
             student.gender = data['gender']
         if 'grade' in data:
@@ -687,26 +833,15 @@ class StudentDetail(Resource):
         if 'research_topic' in data:
             student.research_topic = data['research_topic']
         if 'enrollment_date' in data:
-            student.enrollment_date = datetime.strptime(data['enrollment_date'], '%Y-%m-%d').date()
+            student.enrollment_date = parse_date(data.get('enrollment_date'), 'enrollment_date')
         if 'mentor_id' in data:
-            student.mentor_id = data['mentor_id']
-        
+            mentor_id = data.get('mentor_id')
+            if mentor_id and not Mentor.query.get(mentor_id):
+                api.abort(404, f"Mentor with id {mentor_id} not found")
+            student.mentor_id = mentor_id
+
         db.session.commit()
-        
-        return {
-            'id': student.id,
-            'user_id': student.user_id,
-            'mentor_id': student.mentor_id,
-            'name': student.name,
-            'student_no': student.student_no,
-            'gender': student.gender,
-            'grade': student.grade,
-            'student_type': student.student_type,
-            'major': student.major,
-            'research_topic': student.research_topic,
-            'enrollment_date': student.enrollment_date.isoformat() if student.enrollment_date else None,
-            'created_at': student.created_at.isoformat()
-        }
+        return serialize_student(student)
 
 @ns_students.route('/<id>/assign-mentor')
 class AssignMentor(Resource):
@@ -714,35 +849,23 @@ class AssignMentor(Resource):
     @ns_students.expect(assign_mentor_model)
     def put(self, current_user, id):
         """分配导师"""
-        data = request.json
-        mentor_id = int(data.get('mentor_id'))
-        
+        require_roles(current_user, ['admin'])
+        data = request.json or {}
+        mentor_id = data.get('mentor_id')
+        if not mentor_id:
+            api.abort(400, 'mentor_id is required')
+
         student = Student.query.get(id)
         if not student:
             api.abort(404, f"Student with id {id} not found")
-        
+
         mentor = Mentor.query.get(mentor_id)
         if not mentor:
             api.abort(404, f"Mentor with id {mentor_id} not found")
-        
-        # 分配导师
-        student.mentor_id = mentor_id
+
+        student.mentor_id = mentor.id
         db.session.commit()
-        
-        return {
-            'id': student.id,
-            'user_id': student.user_id,
-            'mentor_id': student.mentor_id,
-            'name': student.name,
-            'student_no': student.student_no,
-            'gender': student.gender,
-            'grade': student.grade,
-            'student_type': student.student_type,
-            'major': student.major,
-            'research_topic': student.research_topic,
-            'enrollment_date': student.enrollment_date.isoformat() if student.enrollment_date else None,
-            'created_at': student.created_at.isoformat()
-        }
+        return serialize_student(student)
 
 @ns_mentors.route('/')
 class MentorList(Resource):
@@ -1906,13 +2029,22 @@ notification_model = api.model('Notification', {
 class MessageList(Resource):
     @token_required
     def get(self, current_user):
-        """获取我的消息列表"""
-        sent = Message.query.filter_by(sender_id=current_user.id).order_by(Message.created_at.desc()).all()
-        received = Message.query.filter_by(receiver_id=current_user.id).order_by(Message.created_at.desc()).all()
-        
-        sent_list = []
-        for msg in sent:
-            sent_list.append({
+        """获取我的消息列表，支持分页和方向过滤"""
+        direction = request.args.get('direction')  # sent/received/all
+        page, per_page = get_pagination_params()
+
+        base_query = Message.query
+        if direction == 'sent':
+            base_query = base_query.filter_by(sender_id=current_user.id)
+        elif direction == 'received':
+            base_query = base_query.filter_by(receiver_id=current_user.id)
+        else:
+            base_query = base_query.filter(or_(Message.sender_id == current_user.id, Message.receiver_id == current_user.id))
+
+        messages, total = paginate_query(base_query.order_by(Message.created_at.desc()), page, per_page)
+        items = []
+        for msg in messages:
+            items.append({
                 'id': msg.id,
                 'sender_id': msg.sender_id,
                 'receiver_id': msg.receiver_id,
@@ -1922,38 +2054,32 @@ class MessageList(Resource):
                 'is_read': msg.is_read,
                 'created_at': msg.created_at.isoformat()
             })
-        
-        received_list = []
-        for msg in received:
-            received_list.append({
-                'id': msg.id,
-                'sender_id': msg.sender_id,
-                'receiver_id': msg.receiver_id,
-                'content': msg.content,
-                'message_type': msg.message_type,
-                'file_url': msg.file_url,
-                'is_read': msg.is_read,
-                'created_at': msg.created_at.isoformat()
-            })
-        
-        return {'sent': sent_list, 'received': received_list}
+        return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
 
     @token_required
     @ns_messages.expect(message_model)
     def post(self, current_user):
-        """发送消息"""
-        data = request.json
-        
+        """发送消息（仅限可联系对象）"""
+        data = request.json or {}
+        receiver_id = data.get('receiver_id')
+        if not receiver_id:
+            api.abort(400, 'receiver_id is required')
+        receiver = User.query.get(receiver_id)
+        if not receiver:
+            api.abort(404, 'Receiver not found')
+        if not can_contact_user(current_user, receiver_id):
+            api.abort(403, 'You are not allowed to contact this user')
+
         message = Message(
             sender_id=current_user.id,
-            receiver_id=data.get('receiver_id'),
+            receiver_id=receiver_id,
             content=data.get('content'),
             message_type=data.get('message_type', 'text'),
             file_url=data.get('file_url')
         )
         db.session.add(message)
         db.session.commit()
-        
+
         return {
             'id': message.id,
             'sender_id': message.sender_id,
@@ -1973,14 +2099,14 @@ class MessageDetail(Resource):
         message = Message.query.get(id)
         if not message:
             api.abort(404, 'Message not found')
-        
+
         if message.sender_id != current_user.id and message.receiver_id != current_user.id:
             api.abort(403, 'You can only access your own messages')
-        
+
         if message.receiver_id == current_user.id and not message.is_read:
             message.is_read = True
             db.session.commit()
-        
+
         return {
             'id': message.id,
             'sender_id': message.sender_id,
@@ -1996,17 +2122,29 @@ class MessageDetail(Resource):
 class Conversation(Resource):
     @token_required
     def get(self, current_user, user_id):
-        """获取与特定用户的对话"""
-        messages = Message.query.filter(
-            ((Message.sender_id == current_user.id) & (Message.receiver_id == user_id)) |
-            ((Message.sender_id == user_id) & (Message.receiver_id == current_user.id))
-        ).order_by(Message.created_at.asc()).all()
-        
-        result = []
+        """获取与特定用户的对话，自动标记接收者未读消息"""
+        try:
+            other_user_id = int(user_id)
+        except ValueError:
+            api.abort(400, 'Invalid user id')
+
+        if not can_contact_user(current_user, other_user_id):
+            api.abort(403, 'You are not allowed to contact this user')
+
+        page, per_page = get_pagination_params(default_per_page=50, max_per_page=200)
+        query = Message.query.filter(
+            or_(
+                (Message.sender_id == current_user.id) & (Message.receiver_id == other_user_id),
+                (Message.sender_id == other_user_id) & (Message.receiver_id == current_user.id)
+            )
+        ).order_by(Message.created_at.asc())
+
+        messages, total = paginate_query(query, page, per_page)
+        items = []
         for msg in messages:
             if msg.receiver_id == current_user.id and not msg.is_read:
                 msg.is_read = True
-            result.append({
+            items.append({
                 'id': msg.id,
                 'sender_id': msg.sender_id,
                 'receiver_id': msg.receiver_id,
@@ -2016,9 +2154,9 @@ class Conversation(Resource):
                 'is_read': msg.is_read,
                 'created_at': msg.created_at.isoformat()
             })
-        
         db.session.commit()
-        return result
+
+        return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
 
 @ns_tasks.route('/')
 class TaskList(Resource):

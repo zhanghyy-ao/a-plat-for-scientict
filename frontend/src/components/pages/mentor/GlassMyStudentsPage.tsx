@@ -61,7 +61,7 @@ const GlassMyStudentsPage: React.FC = () => {
 
   const filteredStudents = students.filter(student =>
     student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.student_no?.includes(searchQuery)
+    student.studentNo?.includes(searchQuery)
   );
 
   const formatDate = (dateStr: string) => {
@@ -78,7 +78,7 @@ const GlassMyStudentsPage: React.FC = () => {
 
   const getStatusText = (status: string) => {
     const texts: { [key: string]: string } = {
-      pending: '待审阅',
+      pending: '待审核',
       reviewed: '已反馈'
     };
     return texts[status] || status;
@@ -156,8 +156,8 @@ const GlassMyStudentsPage: React.FC = () => {
               </motion.div>
               <div>
                 <h1 className="text-3xl font-bold font-orbitron text-white mb-2">{selectedStudent.name}</h1>
-                <p className="text-white/60 font-rajdhani text-lg">{selectedStudent.student_no} · {selectedStudent.grade} · {selectedStudent.major}</p>
-                <p className="text-purple-400 mt-2 font-medium">{selectedStudent.research_topic}</p>
+                <p className="text-white/60 font-rajdhani text-lg">{selectedStudent.studentNo} · {selectedStudent.grade} · {selectedStudent.major}</p>
+                <p className="text-purple-400 mt-2 font-medium">{selectedStudent.researchTopic}</p>
               </div>
             </div>
 
@@ -172,8 +172,8 @@ const GlassMyStudentsPage: React.FC = () => {
                 </h3>
                 <div className="space-y-3">
                   <p className="text-white/70"><span className="text-white/40 font-medium">性别：</span>{selectedStudent.gender || '未填写'}</p>
-                  <p className="text-white/70"><span className="text-white/40 font-medium">入学日期：</span>{selectedStudent.enrollment_date || '未填写'}</p>
-                  <p className="text-white/70"><span className="text-white/40 font-medium">类型：</span>{selectedStudent.student_type === 'undergraduate' ? '本科生' : selectedStudent.student_type === 'graduate' ? '研究生' : '博士生'}</p>
+                  <p className="text-white/70"><span className="text-white/40 font-medium">入学日期：</span>{selectedStudent.enrollmentDate || '未填写'}</p>
+                  <p className="text-white/70"><span className="text-white/40 font-medium">类型：</span>{selectedStudent.studentType === 'undergraduate' ? '本科生' : selectedStudent.studentType === 'graduate' ? '研究生' : '博士生'}</p>
                 </div>
               </motion.div>
 
@@ -186,7 +186,7 @@ const GlassMyStudentsPage: React.FC = () => {
                   研究信息
                 </h3>
                 <div className="space-y-3">
-                  <p className="text-white/70"><span className="text-white/40 font-medium">课题：</span>{selectedStudent.research_topic || '未设置'}</p>
+                  <p className="text-white/70"><span className="text-white/40 font-medium">课题：</span>{selectedStudent.researchTopic || '未设置'}</p>
                   <p className="text-white/70"><span className="text-white/40 font-medium">专业：</span>{selectedStudent.major}</p>
                   <p className="text-white/70"><span className="text-white/40 font-medium">年级：</span>{selectedStudent.grade}</p>
                 </div>
@@ -243,7 +243,7 @@ const GlassMyStudentsPage: React.FC = () => {
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
                         <h3 className="font-semibold font-orbitron text-white text-lg mb-2">{progress.title}</h3>
-                        <p className="text-white/50 text-sm font-rajdhani">{formatDate(progress.created_at)}</p>
+                        <p className="text-white/50 text-sm font-rajdhani">{formatDate(progress.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-4 ml-6">
                         <div className="text-right">
@@ -265,10 +265,10 @@ const GlassMyStudentsPage: React.FC = () => {
                       </div>
                     )}
                     
-                    {progress.next_plan && (
+                    {progress.nextPlan && (
                       <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
                         <p className="text-sm font-medium text-green-400 mb-2">下一步计划</p>
-                        <p className="text-sm text-white/60">{progress.next_plan}</p>
+                        <p className="text-sm text-white/60">{progress.nextPlan}</p>
                       </div>
                     )}
 
@@ -362,7 +362,7 @@ const GlassMyStudentsPage: React.FC = () => {
                     </motion.div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold font-orbitron text-white mb-1 truncate">{student.name}</h3>
-                      <p className="text-white/50 text-sm font-rajdhani">{student.student_no}</p>
+                      <p className="text-white/50 text-sm font-rajdhani">{student.studentNo}</p>
                     </div>
                   </div>
                   
@@ -373,9 +373,9 @@ const GlassMyStudentsPage: React.FC = () => {
                     <p className="text-white/70 text-sm">
                       <span className="text-white/40 font-medium">专业：</span>{student.major}
                     </p>
-                    {student.research_topic && (
+                    {student.researchTopic && (
                       <p className="text-white/70 text-sm line-clamp-2">
-                        <span className="text-white/40 font-medium">课题：</span>{student.research_topic}
+                        <span className="text-white/40 font-medium">课题：</span>{student.researchTopic}
                       </p>
                     )}
                   </div>

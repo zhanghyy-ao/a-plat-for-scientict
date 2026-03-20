@@ -1,0 +1,8 @@
+Flask==3.0.2
+Flask-Cors==4.0.0
+SQLAlchemy==2.0.29
+PyMySQL==1.1.0
+alembic==1.13.1
+python-dotenv==1.0.1
+requests==2.31.0
+pydantic==2.6.4

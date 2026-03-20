@@ -5,7 +5,9 @@ import {
   FiHome, FiBook, FiLayout,
   FiFileText, FiEdit3, FiArrowUpRight,
   FiUsers, FiClipboard,
-  FiCalendar
+  FiCalendar,
+  FiMessageSquare,
+  FiImage
 } from 'react-icons/fi';
 
 interface SidebarProps {
@@ -21,12 +23,16 @@ const Sidebar: React.FC<SidebarProps> = ({ type, className = '' }) => {
     { name: '预约管理', path: '/appointments', icon: <FiCalendar /> },
     { name: '学习资源', path: '/resources', icon: <FiFileText /> },
     { name: '个人笔记', path: '/notes', icon: <FiEdit3 /> },
+    { name: 'AI 助手', path: '/ai-chat', icon: <FiMessageSquare /> },
+    { name: 'AI 画图', path: '/ai-image-generation', icon: <FiImage /> },
   ];
 
   const mentorLinks = [
     { name: '导师工作台', path: '/mentor-dashboard', icon: <FiHome /> },
     { name: '我的学生', path: '/my-students', icon: <FiUsers /> },
     { name: '待审进度', path: '/pending-progress', icon: <FiClipboard /> },
+    { name: 'AI 助手', path: '/ai-chat', icon: <FiMessageSquare /> },
+    { name: 'AI 画图', path: '/ai-image-generation', icon: <FiImage /> },
   ];
 
   const links = type === 'student' ? studentLinks : mentorLinks;

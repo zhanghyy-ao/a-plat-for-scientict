@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'http://localhost:4000';
 
 let authToken: string | null = null;
 
@@ -37,15 +37,46 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     return response.json();
   } catch (error: any) {
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      throw new Error('无法连接到服务器，请检查后端服务是否运行 (http://localhost:5000)');
+      throw new Error('无法连接到服务器，请检查后端服务是否运行 (http://localhost:4000)');
     }
     throw error;
   }
 }
 
+export const api = {
+  get: <T>(url: string, options?: { params?: Record<string, string | number> }) => {
+    let fullUrl = url;
+    if (options?.params) {
+      const searchParams = new URLSearchParams();
+      Object.entries(options.params).forEach(([key, value]) => {
+        searchParams.append(key, String(value));
+      });
+      fullUrl = `${url}?${searchParams.toString()}`;
+    }
+    return request<T>(fullUrl);
+  },
+  post: <T>(url: string, data?: any, options?: RequestInit) =>
+    request<T>(url, {
+      ...options,
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+  put: <T>(url: string, data?: any, options?: RequestInit) =>
+    request<T>(url, {
+      ...options,
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+  delete: <T>(url: string, options?: RequestInit) =>
+    request<T>(url, {
+      ...options,
+      method: 'DELETE',
+    }),
+};
+
 export const authApi = {
   login: (username: string, password: string) =>
-    request<any>('/auth/login', {
+    request<any>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     }),
@@ -61,81 +92,86 @@ export const authApi = {
     title?: string;
     department?: string;
   }) =>
-    request<any>('/auth/register', {
+    request<any>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  getMe: () => request<any>('/auth/me'),
+  getMe: () => request<any>('/api/auth/me'),
 };
 
 export const studentApi = {
   getStudents: (mentorId?: string) => {
     const query = mentorId ? `?mentor_id=${mentorId}` : '';
-    return request<any[]>(`/students/${query}`);
+    return request<any[]>(`/api/students/${query}`);
   },
-  getStudent: (id: string) => request<any>(`/students/${id}`),
+  getStudent: (id: string) => request<any>(`/api/students/${id}`),
   createStudent: (data: any) =>
-    request<any>('/students/', {
+    request<any>('/api/students/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   updateStudent: (id: string, data: any) =>
-    request<any>(`/students/${id}`, {
+    request<any>(`/api/students/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   deleteStudent: (id: string) =>
-    request<any>(`/students/${id}`, {
+    request<any>(`/api/students/${id}`, {
       method: 'DELETE',
     }),
   updateStudentPassword: (id: string, password: string) =>
-    request<any>(`/students/${id}/password`, {
+    request<any>(`/api/students/${id}/password`, {
       method: 'PUT',
       body: JSON.stringify({ password }),
     }),
   assignMentor: (id: string, mentorId: string) =>
-    request<any>(`/students/${id}/assign-mentor`, {
+    request<any>(`/api/students/${id}/assign-mentor`, {
       method: 'PUT',
       body: JSON.stringify({ mentor_id: mentorId }),
     }),
 };
 
 export const mentorApi = {
-  getMentors: () => request<any[]>('/mentors/'),
-  getMentor: (id: string) => request<any>(`/mentors/${id}`),
+  getMentors: () => request<any[]>('/api/mentors/'),
+  getMentor: (id: string) => request<any>(`/api/mentors/${id}`),
   createMentor: (data: any) =>
-    request<any>('/mentors/', {
+    request<any>('/api/mentors/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   updateMentor: (id: string, data: any) =>
-    request<any>(`/mentors/${id}`, {
+    request<any>(`/api/mentors/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   deleteMentor: (id: string) =>
-    request<any>(`/mentors/${id}`, {
+    request<any>(`/api/mentors/${id}`, {
       method: 'DELETE',
     }),
   updateMentorPassword: (id: string, password: string) =>
-    request<any>(`/mentors/${id}/password`, {
+    request<any>(`/api/mentors/${id}/password`, {
       method: 'PUT',
       body: JSON.stringify({ password }),
     }),
   getMentorStudents: (id: string) =>
-    request<any[]>(`/mentors/${id}/students`),
+    request<any[]>(`/api/mentors/${id}/students`),
+};
+
+export const userApi = {
+  getAllUsers: () => request<any[]>('/api/users/'),
+  getUser: (id: string) => request<any>(`/api/users/${id}`),
 };
 
 export const myApi = {
-  getMyStudents: () => request<any[]>('/my/students'),
+  getMyStudents: () => request<any[]>('/api/my/students'),
   getMyStudentDetail: (id: string) =>
-    request<any>(`/my/students/${id}`),
-  getMyMentor: () => request<any>('/my/mentor'),
-  getMyProgress: () => request<any[]>('/my/progress'),
-  getMyPendingProgress: () => request<any[]>('/my/pending-progress'),
-  getMyProfile: () => request<any>('/my/profile'),
+    request<any>(`/api/my/students/${id}`),
+  getMyMentor: () => request<any>('/api/my/mentor'),
+  getMyProgress: () => request<any[]>('/api/my/progress'),
+  getMyPendingProgress: () => request<any[]>('/api/my/pending-progress'),
+  getMyProfile: () => request<any>('/api/my/profile'),
   updateMyProfile: (data: any) =>
-    request<any>('/my/profile', {
+    request<any>('/api/my/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
@@ -147,87 +183,87 @@ export const progressApi = {
     if (studentId) params.append('student_id', studentId);
     if (status) params.append('status', status);
     const query = params.toString() ? `?${params.toString()}` : '';
-    return request<any[]>(`/progress/${query}`);
+    return request<any[]>(`/api/progress/${query}`);
   },
   getProgressDetail: (id: string) =>
-    request<any>(`/progress/${id}`),
+    request<any>(`/api/progress/${id}`),
   createProgress: (data: any) =>
-    request<any>('/progress/', {
+    request<any>('/api/progress/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   updateProgress: (id: string, data: any) =>
-    request<any>(`/progress/${id}`, {
+    request<any>(`/api/progress/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   getFeedback: (id: string) =>
-    request<any>(`/progress/${id}/feedback`),
+    request<any>(`/api/progress/${id}/feedback`),
   submitFeedback: (id: string, data: any) =>
-    request<any>(`/progress/${id}/feedback`, {
+    request<any>(`/api/progress/${id}/feedback`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   updateFeedback: (id: string, data: any) =>
-    request<any>(`/progress/${id}/feedback`, {
+    request<any>(`/api/progress/${id}/feedback`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 };
 
 export const projectApi = {
-  getProjects: () => request<any[]>('/projects/'),
-  getProject: (id: string) => request<any>(`/projects/${id}`),
+  getProjects: () => request<any[]>('/api/projects/'),
+  getProject: (id: string) => request<any>(`/api/projects/${id}`),
   createProject: (data: any) =>
-    request<any>('/projects/', {
+    request<any>('/api/projects/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   updateProject: (id: string, data: any) =>
-    request<any>(`/projects/${id}`, {
+    request<any>(`/api/projects/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   deleteProject: (id: string) =>
-    request<any>(`/projects/${id}`, {
+    request<any>(`/api/projects/${id}`, {
       method: 'DELETE',
     }),
 };
 
 export const newsApi = {
-  getNews: () => request<any[]>('/news/'),
-  getNewsItem: (id: string) => request<any>(`/news/${id}`),
+  getNews: () => request<any[]>('/api/news/'),
+  getNewsItem: (id: string) => request<any>(`/api/news/${id}`),
   createNews: (data: any) =>
-    request<any>('/news/', {
+    request<any>('/api/news/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   updateNews: (id: string, data: any) =>
-    request<any>(`/news/${id}`, {
+    request<any>(`/api/news/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   deleteNews: (id: string) =>
-    request<any>(`/news/${id}`, {
+    request<any>(`/api/news/${id}`, {
       method: 'DELETE',
     }),
 };
 
 export const achievementApi = {
-  getAchievements: () => request<any[]>('/achievements/'),
-  getAchievement: (id: string) => request<any>(`/achievements/${id}`),
+  getAchievements: () => request<any[]>('/api/achievements/'),
+  getAchievement: (id: string) => request<any>(`/api/achievements/${id}`),
   createAchievement: (data: any) =>
-    request<any>('/achievements/', {
+    request<any>('/api/achievements/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   updateAchievement: (id: string, data: any) =>
-    request<any>(`/achievements/${id}`, {
+    request<any>(`/api/achievements/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   deleteAchievement: (id: string) =>
-    request<any>(`/achievements/${id}`, {
+    request<any>(`/api/achievements/${id}`, {
       method: 'DELETE',
     }),
 };
@@ -238,21 +274,21 @@ export const todoApi = {
     if (status) params.append('status', status);
     if (priority) params.append('priority', priority);
     const query = params.toString() ? `?${params.toString()}` : '';
-    return request<any[]>(`/todos/${query}`);
+    return request<any[]>(`/api/todos/${query}`);
   },
-  getTodo: (id: string) => request<any>(`/todos/${id}`),
+  getTodo: (id: string) => request<any>(`/api/todos/${id}`),
   createTodo: (data: any) =>
-    request<any>('/todos/', {
+    request<any>('/api/todos/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   updateTodo: (id: string, data: any) =>
-    request<any>(`/todos/${id}`, {
+    request<any>(`/api/todos/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   deleteTodo: (id: string) =>
-    request<any>(`/todos/${id}`, {
+    request<any>(`/api/todos/${id}`, {
       method: 'DELETE',
     }),
 };
@@ -263,31 +299,31 @@ export const resourceApi = {
     if (type) params.append('type', type);
     if (category) params.append('category', category);
     const query = params.toString() ? `?${params.toString()}` : '';
-    return request<any[]>(`/resources/${query}`);
+    return request<any[]>(`/api/resources/${query}`);
   },
-  getResource: (id: string) => request<any>(`/resources/${id}`),
+  getResource: (id: string) => request<any>(`/api/resources/${id}`),
   createResource: (data: any) =>
-    request<any>('/resources/', {
+    request<any>('/api/resources/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 };
 
 export const noteApi = {
-  getNotes: () => request<any[]>('/notes/'),
-  getNote: (id: string) => request<any>(`/notes/${id}`),
+  getNotes: () => request<any[]>('/api/notes/'),
+  getNote: (id: string) => request<any>(`/api/notes/${id}`),
   createNote: (data: any) =>
-    request<any>('/notes/', {
+    request<any>('/api/notes/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   updateNote: (id: string, data: any) =>
-    request<any>(`/notes/${id}`, {
+    request<any>(`/api/notes/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   deleteNote: (id: string) =>
-    request<any>(`/notes/${id}`, {
+    request<any>(`/api/notes/${id}`, {
       method: 'DELETE',
     }),
 };
@@ -295,117 +331,117 @@ export const noteApi = {
 export const bookingApi = {
   getBookings: (status?: string) => {
     const query = status ? `?status=${status}` : '';
-    return request<any[]>(`/bookings/${query}`);
+    return request<any[]>(`/api/bookings/${query}`);
   },
-  getBooking: (id: string) => request<any>(`/bookings/${id}`),
+  getBooking: (id: string) => request<any>(`/api/bookings/${id}`),
   createBooking: (data: any) =>
-    request<any>('/bookings/', {
+    request<any>('/api/bookings/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   deleteBooking: (id: string) =>
-    request<any>(`/bookings/${id}`, {
+    request<any>(`/api/bookings/${id}`, {
       method: 'DELETE',
     }),
 };
 
 export const messageApi = {
-  getMessages: () => request<any>('/messages/'),
+  getMessages: () => request<any>('/api/messages/'),
   sendMessage: (data: any) =>
-    request<any>('/messages/', {
+    request<any>('/api/messages/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  getMessage: (id: string) => request<any>(`/messages/${id}`),
+  getMessage: (id: string) => request<any>(`/api/messages/${id}`),
   getConversation: (userId: string) =>
-    request<any[]>(`/messages/conversation/${userId}`),
+    request<any[]>(`/api/messages/conversation/${userId}`),
 };
 
 export const taskApi = {
-  getTasks: () => request<any[]>('/tasks/'),
+  getTasks: () => request<any[]>('/api/tasks/'),
   createTask: (data: any) =>
-    request<any>('/tasks/', {
+    request<any>('/api/tasks/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  getTask: (id: string) => request<any>(`/tasks/${id}`),
+  getTask: (id: string) => request<any>(`/api/tasks/${id}`),
   updateTask: (id: string, data: any) =>
-    request<any>(`/tasks/${id}`, {
+    request<any>(`/api/tasks/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   deleteTask: (id: string) =>
-    request<any>(`/tasks/${id}`, {
+    request<any>(`/api/tasks/${id}`, {
       method: 'DELETE',
     }),
   updateAssignment: (taskId: string, assignmentId: string, data: any) =>
-    request<any>(`/tasks/${taskId}/assignments/${assignmentId}`, {
+    request<any>(`/api/tasks/${taskId}/assignments/${assignmentId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 };
 
 export const appointmentApi = {
-  getAppointments: () => request<any[]>('/appointments/'),
+  getAppointments: () => request<any[]>('/api/appointments/'),
   createAppointment: (data: any) =>
-    request<any>('/appointments/', {
+    request<any>('/api/appointments/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  getAppointment: (id: string) => request<any>(`/appointments/${id}`),
+  getAppointment: (id: string) => request<any>(`/api/appointments/${id}`),
   updateAppointment: (id: string, data: any) =>
-    request<any>(`/appointments/${id}`, {
+    request<any>(`/api/appointments/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   deleteAppointment: (id: string) =>
-    request<any>(`/appointments/${id}`, {
+    request<any>(`/api/appointments/${id}`, {
       method: 'DELETE',
     }),
 };
 
 export const notificationApi = {
-  getNotifications: () => request<any[]>('/notifications/'),
-  getNotification: (id: string) => request<any>(`/notifications/${id}`),
+  getNotifications: () => request<any[]>('/api/notifications/'),
+  getNotification: (id: string) => request<any>(`/api/notifications/${id}`),
   markAsRead: (id: string) =>
-    request<any>(`/notifications/${id}`, {
+    request<any>(`/api/notifications/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ is_read: true }),
     }),
   updateNotification: (id: string, data: any) =>
-    request<any>(`/notifications/${id}`, {
+    request<any>(`/api/notifications/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
   deleteNotification: (id: string) =>
-    request<any>(`/notifications/${id}`, {
+    request<any>(`/api/notifications/${id}`, {
       method: 'DELETE',
     }),
   markAllAsRead: () =>
-    request<any>('/notifications/mark-all-read', {
+    request<any>('/api/notifications/mark-all-read', {
       method: 'PUT',
     }),
 };
 
 export const healthApi = {
-  check: () => request<any>('/health'),
+  check: () => request<any>('/api/health'),
 };
 
 export const channelApi = {
-  getChannels: () => request<any[]>('/channels/'),
+  getChannels: () => request<any[]>('/api/channels/'),
   createChannel: (data: any) =>
-    request<any>('/channels/', {
+    request<any>('/api/channels/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  getChannel: (id: string) => request<any>(`/channels/${id}/`),
+  getChannel: (id: string) => request<any>(`/api/channels/${id}/`),
   deleteChannel: (id: string) =>
-    request<any>(`/channels/${id}/`, {
+    request<any>(`/api/channels/${id}/`, {
       method: 'DELETE',
     }),
-  getMessages: (channelId: string) => request<any[]>(`/channels/${channelId}/messages/`),
+  getMessages: (channelId: string) => request<any[]>(`/api/channels/${channelId}/messages/`),
   sendMessage: (channelId: string, data: any) =>
-    request<any>(`/channels/${channelId}/messages/`, {
+    request<any>(`/api/channels/${channelId}/messages/`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),

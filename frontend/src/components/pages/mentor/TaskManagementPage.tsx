@@ -250,21 +250,21 @@ const TaskManagementPage: React.FC = () => {
                       )}
                       
                       <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
-                        {task.due_date && (
+                        {task.dueDate && (
                           <span className="flex items-center gap-1">
                             <FiCalendar className="w-3 h-3" />
-                            截止: {new Date(task.due_date).toLocaleDateString('zh-CN')}
+                            截止: {new Date(task.dueDate).toLocaleDateString('zh-CN')}
                           </span>
                         )}
-                        {task.assigned_students && task.assigned_students.length > 0 && (
+                        {task.assignedStudents && task.assignedStudents.length > 0 && (
                           <span className="flex items-center gap-1">
                             <FiUser className="w-3 h-3" />
-                            分配给: {task.assigned_students.map((s: any) => s.name).join(', ')}
+                            分配给：{task.assignedStudents.map((s: any) => s.name).join(', ')}
                           </span>
                         )}
                         <span className="flex items-center gap-1">
                           <FiClock className="w-3 h-3" />
-                          创建于: {new Date(task.created_at).toLocaleDateString('zh-CN')}
+                          创建于：{new Date(task.createdAt).toLocaleDateString('zh-CN')}
                         </span>
                       </div>
                     </div>
@@ -401,7 +401,7 @@ const TaskManagementPage: React.FC = () => {
                   >
                     {students.map((student) => (
                       <option key={student.id} value={student.id}>
-                        {student.name} ({student.student_no})
+                        {student.name} ({student.studentNo})
                       </option>
                     ))}
                   </select>

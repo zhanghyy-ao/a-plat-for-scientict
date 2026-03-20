@@ -56,8 +56,8 @@ const GlassPendingProgressPage: React.FC = () => {
       const data = await progressApi.getProgressDetail(id);
       setSelectedProgress(data.progress);
 
-      if (data.progress.student_id) {
-        const student = await studentApi.getStudent(data.progress.student_id);
+      if (data.progress.studentId) {
+        const student = await studentApi.getStudent(data.progress.studentId);
         setStudentInfo(student);
       }
     } catch (error) {
@@ -178,15 +178,15 @@ const GlassPendingProgressPage: React.FC = () => {
               </motion.div>
               <div>
                 <h2 className="text-xl font-semibold font-orbitron text-white mb-2">{studentInfo?.name}</h2>
-                <p className="text-white/60 font-rajdhani">{studentInfo?.student_no} · {studentInfo?.grade} · {studentInfo?.major}</p>
-                <p className="text-purple-400 text-sm mt-1">{studentInfo?.research_topic}</p>
+                <p className="text-white/60 font-rajdhani">{studentInfo?.studentNo} · {studentInfo?.grade} · {studentInfo?.major}</p>
+                <p className="text-purple-400 text-sm mt-1">{studentInfo?.researchTopic}</p>
               </div>
             </div>
 
             <div className="flex justify-between items-start mb-8">
               <div className="flex-1">
                 <h1 className="text-3xl font-bold font-orbitron text-white mb-3">{selectedProgress.title}</h1>
-                <p className="text-white/50 mt-2 font-rajdhani">{formatDate(selectedProgress.created_at)}</p>
+                <p className="text-white/50 mt-2 font-rajdhani">{formatDate(selectedProgress.createdAt)}</p>
               </div>
               <div className="text-right">
                 <p className="text-white/50 text-sm font-rajdhani">完成度</p>
@@ -212,13 +212,13 @@ const GlassPendingProgressPage: React.FC = () => {
               </div>
             )}
 
-            {selectedProgress.next_plan && (
+            {selectedProgress.nextPlan && (
               <div className="mb-8 p-6 bg-green-500/10 rounded-2xl border border-green-500/20">
                 <h3 className="font-semibold font-orbitron text-green-400 mb-3 flex items-center gap-2">
                   <FaClipboardList className="text-green-400" />
                   下一步计划
                 </h3>
-                <p className="text-white/70 whitespace-pre-wrap">{selectedProgress.next_plan}</p>
+                <p className="text-white/70 whitespace-pre-wrap">{selectedProgress.nextPlan}</p>
               </div>
             )}
 
@@ -375,7 +375,7 @@ const GlassPendingProgressPage: React.FC = () => {
                         </motion.div>
                         <div className="flex-1">
                           <h3 className="font-semibold font-orbitron text-white text-xl mb-2">{progress.title}</h3>
-                          <p className="text-white/50 text-sm font-rajdhani">{formatDate(progress.created_at)}</p>
+                          <p className="text-white/50 text-sm font-rajdhani">{formatDate(progress.createdAt)}</p>
                         </div>
                       </div>
                       <p className="text-white/70 line-clamp-2 mb-6 leading-relaxed">{progress.content}</p>

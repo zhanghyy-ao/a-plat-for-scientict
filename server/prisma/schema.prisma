@@ -1,0 +1,458 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  password     String
+  email        String?  @unique
+  phone        String?
+  nickname     String
+  avatar       String? 
+  role         String   @default("student") // admin/mentor/student
+  status       String   @default("offline") // online/offline/busy
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  conversations ConversationMember[]
+  messages      Message[] @relation("UserMessages")
+  pinnedConversations Conversation[] @relation("PinnedConversations")
+  mutedConversations  Conversation[] @relation("MutedConversations")
+  aiConversations AIConversation[]
+  messageReads  MessageRead[]
+  groupMembers  GroupMember[]
+  sentMessages  Message2[] @relation("SentMessages")
+  receivedMessages Message2[] @relation("ReceivedMessages")
+  notifications Notification[]
+  mentor        Mentor?
+  student       Student?
+}
+
+model Conversation {
+  id           String   @id @default(cuid())
+  isGroup      Boolean  @default(false)
+  pinnedBy     User[]   @relation("PinnedConversations")
+  mutedBy      User[]   @relation("MutedConversations")
+  createdAt    DateTime @default(now())
+  members      ConversationMember[]
+  messages     Message[]
+}
+
+model ConversationMember {
+  id             String   @id @default(cuid())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String
+  user           User @relation(fields: [userId], references: [id])
+  userId         String
+  role           String @default("member") // owner/admin/member
+  joinedAt       DateTime @default(now())
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String
+  sender         User @relation("UserMessages", fields: [senderId], references: [id])
+  senderId       String
+  content        String
+  messageType    String @default("text") // text/image/file/voice
+  fileUrl        String?
+  fileName       String?
+  fileSize       Int?
+  replyToId      String?
+  replyTo        Message? @relation("ReplyTo", fields: [replyToId], references: [id])
+  replies        Message[] @relation("ReplyTo")
+  isRecalled     Boolean @default(false)
+  createdAt      DateTime @default(now())
+  reads          MessageRead[]
+}
+
+model MessageRead {
+  id        String   @id @default(cuid())
+  message   Message  @relation(fields: [messageId], references: [id])
+  messageId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  readAt    DateTime @default(now())
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  avatar      String?
+  ownerId     String
+  maxMembers  Int      @default(200)
+  createdAt   DateTime @default(now())
+  members     GroupMember[]
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  group     Group    @relation(fields: [groupId], references: [id])
+  groupId   String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  role      String   @default("member") // owner/admin/member
+  joinTime  DateTime @default(now())
+}
+
+// AI对话记录表
+model AIConversation {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  sessionId       String
+  messageRole     String   // user/assistant/system
+  messageContent  String
+  agentType       String?  // 使用的智能体类型
+  tokensUsed      Int?
+  responseTimeMs  Int?
+  createdAt       DateTime @default(now())
+  
+  @@index([userId, sessionId])
+  @@index([createdAt])
+}
+
+// AI使用详细记录表
+model AIUsageResult {
+  id                String   @id @default(cuid())
+  userId            String
+  userRole          String   // admin/mentor/student
+  sessionId         String
+  featureType       String   // chat/writing/analysis/recommendation/search/image
+  agentType         String?  // 使用的智能体类型
+  userQuery         String   // 用户输入
+  aiResponse        String   // AI返回结果
+  promptTokens      Int      @default(0)
+  completionTokens  Int      @default(0)
+  totalTokens       Int      @default(0)
+  responseTimeMs    Int?
+  modelName         String?
+  isSuccess         Boolean  @default(true)
+  errorMessage      String?
+  userFeedback      String   @default("none") // positive/negative/none
+  ipAddress         String?
+  createdAt         DateTime @default(now())
+  
+  @@index([userId])
+  @@index([userRole])
+  @@index([featureType])
+  @@index([agentType])
+  @@index([createdAt])
+  @@index([sessionId])
+}
+
+// AI使用汇总统计表
+model AIUsageSummary {
+  id                      String   @id @default(cuid())
+  userId                  String
+  userRole                String   // admin/mentor/student
+  date                    DateTime
+  totalRequests           Int      @default(0)
+  totalTokens             Int      @default(0)
+  chatRequests            Int      @default(0)
+  writingRequests         Int      @default(0)
+  analysisRequests        Int      @default(0)
+  imageGenerationRequests Int      @default(0)
+  avgResponseTimeMs       Int?
+  successRate             Float    @default(100.0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  
+  @@unique([userId, date])
+}
+
+// AI图像生成记录表
+model AIImageGeneration {
+  id                 String   @id @default(cuid())
+  userId             String
+  sessionId          String?
+  prompt             String
+  imageType          String?  // chart/architecture/flowchart/model/concept/composite
+  generationParams   String?  // JSON string
+  templateId         String?
+  imageUrl           String?
+  imageUrls          String?  // JSON string for multiple formats
+  editData           String?  // JSON string for edit data
+  generationMethod   String?  // ai/template/code
+  modelUsed          String?
+  tokensUsed         Int?
+  status             String   @default("pending") // pending/generating/completed/failed
+  isFavorite         Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([imageType])
+  @@index([status])
+}
+
+// 图像模板表
+model ImageTemplate {
+  id              String   @id @default(cuid())
+  name            String
+  category        String   // chart/architecture/flowchart/model/concept/composite
+  templateCode    String?
+  defaultData     String?  // JSON string
+  previewImageUrl String?
+  usageCount      Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  
+  @@index([category])
+}
+
+// 用户AI画像表
+model UserAIProfile {
+  id                      String   @id @default(cuid())
+  userId                  String   @unique
+  researchInterests       String?  // JSON string
+  skillLevels             String?  // JSON string
+  learningPreferences     String?  // JSON string
+  interactionHistory      String?  // JSON string
+  personalizationSettings String?  // JSON string
+  updatedAt               DateTime @updatedAt
+}
+
+// ==================== 导师端核心业务模型 ====================
+
+// 导师表
+model Mentor {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id])
+  name              String
+  title             String?  // 职称：教授/副教授/讲师
+  department        String?  // 部门
+  researchDirection String?  // 研究方向
+  bio               String?  // 个人简介
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  students          Student[]
+  tasks             Task[]
+  appointments      Appointment[]
+  feedbacks         MentorFeedback[]
+  
+  @@index([department])
+}
+
+// 学生表
+model Student {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
+  mentorId       String?
+  mentor         Mentor?  @relation(fields: [mentorId], references: [id], onDelete: SetNull)
+  name           String
+  studentNo      String   @unique  // 学号
+  gender         String?
+  grade          String?  // 年级
+  studentType    String?  // undergraduate/graduate/phd
+  major          String?  // 专业
+  researchTopic  String?  // 研究课题
+  enrollmentDate DateTime? // 入学日期
+  bio            String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  progressReports   ProgressReport[]
+  taskAssignments   TaskAssignment[]
+  appointments      Appointment[]
+  
+  @@index([mentorId])
+  @@index([grade])
+  @@index([studentType])
+}
+
+// 进度报告表
+model ProgressReport {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title       String
+  content     String
+  completion  Int      @default(0)  // 0-100
+  problems    String?  // 遇到的问题
+  nextPlan    String?  // 下一步计划
+  status      String   @default("pending") // pending/reviewed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  feedback      MentorFeedback?
+  attachments   ProgressAttachment[]
+  
+  @@index([studentId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// 进度附件表
+model ProgressAttachment {
+  id           String   @id @default(cuid())
+  progressId   String
+  progress     ProgressReport @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  fileType     String?
+  createdAt    DateTime @default(now())
+  
+  @@index([progressId])
+}
+
+// 导师反馈表
+model MentorFeedback {
+  id          String   @id @default(cuid())
+  progressId  String   @unique
+  progress    ProgressReport @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  mentorId    String
+  mentor      Mentor   @relation(fields: [mentorId], references: [id])
+  content     String
+  rating      Int      @default(3)  // 1-5星
+  isApproved  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([mentorId])
+  @@index([progressId])
+}
+
+// 任务表
+model Task {
+  id          String   @id @default(cuid())
+  mentorId    String
+  mentor      Mentor   @relation(fields: [mentorId], references: [id])
+  title       String
+  description String?
+  priority    String   @default("medium") // low/medium/high
+  dueDate     DateTime?
+  status      String   @default("pending") // pending/in_progress/completed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  assignments TaskAssignment[]
+  
+  @@index([mentorId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+// 任务分配表
+model TaskAssignment {
+  id               String   @id @default(cuid())
+  taskId           String
+  task             Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  studentId        String
+  student          Student  @relation(fields: [studentId], references: [id])
+  status           String   @default("pending") // pending/in_progress/completed
+  submittedAt      DateTime?
+  submissionContent String?
+  feedback         String?
+  feedbackAt       DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@unique([taskId, studentId])
+  @@index([taskId])
+  @@index([studentId])
+  @@index([status])
+}
+
+// 预约表
+model Appointment {
+  id              String   @id @default(cuid())
+  mentorId        String
+  mentor          Mentor   @relation(fields: [mentorId], references: [id])
+  studentId       String
+  student         Student  @relation(fields: [studentId], references: [id])
+  title           String
+  description     String?
+  appointmentType String   @default("offline") // online/offline
+  location        String?
+  startTime       DateTime
+  endTime         DateTime
+  status          String   @default("pending") // pending/confirmed/cancelled/completed
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([mentorId])
+  @@index([studentId])
+  @@index([status])
+  @@index([startTime])
+}
+
+// 消息表 (导师-学生通信)
+model Message2 {
+  id          String   @id @default(cuid())
+  senderId    String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId  String
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content     String
+  messageType String   @default("text") // text/file/image
+  fileUrl     String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+}
+
+// 通知表
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  content   String?
+  type      String   // system/progress/task/appointment/message
+  relatedId String?  // 关联对象ID
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// 新闻表
+model News {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  author    String?
+  category  String   @default("general") // general/research/academic/event
+  imageUrl  String?
+  viewCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([createdAt])
+}
+
+// 成果表
+model Achievement {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  author      String?
+  type        String   @default("paper") // paper/patent/project/award/other
+  imageUrl    String?
+  link        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([createdAt])
+}

@@ -26,6 +26,9 @@ import StudentProfilePage from './components/pages/student/StudentProfilePage';
 
 import StudentAppointmentPage from './components/pages/student/StudentAppointmentPage';
 import AdminStudentManagement from './components/pages/admin/AdminStudentManagement';
+import AIUsageRecordsPage from './components/pages/admin/AIUsageRecordsPage';
+import AIChatPage from './components/pages/ai/AIChatPage';
+import AIImageGenerationPage from './components/pages/ai/AIImageGenerationPage';
 
 import GlassMyStudentsPage from './components/pages/mentor/GlassMyStudentsPage';
 import GlassPendingProgressPage from './components/pages/mentor/GlassPendingProgressPage';
@@ -34,6 +37,7 @@ import TaskManagementPage from './components/pages/mentor/TaskManagementPage';
 import AppointmentManagementPage from './components/pages/mentor/AppointmentManagementPage';
 import NotificationPage from './components/pages/mentor/NotificationPage';
 import MessageCenter from './components/pages/MessageCenter';
+import AIAssistantFloat from './components/ai/AIAssistantFloat';
 
 const AppContent: React.FC = () => {
   const { login } = useAuth();
@@ -41,7 +45,7 @@ const AppContent: React.FC = () => {
 
   const handleLogin = async (username: string, password: string) => {
     try {
-      const response = await fetch('http://localhost:5000/auth/login', {
+      const response = await fetch('http://localhost:4000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,6 +106,7 @@ const AppContent: React.FC = () => {
         <Route path="/content-management/research-areas" element={<ResearchAreasManagement />} />
         <Route path="/content-management/about" element={<AboutManagement />} />
         <Route path="/content-management/contact" element={<ContactManagement />} />
+        <Route path="/ai-usage-records" element={<AIUsageRecordsPage />} />
       </Route>
 
       {/* 学生路由 */}
@@ -132,6 +137,8 @@ const AppContent: React.FC = () => {
         <Route path="/student-hub" element={<EnhancedStudentHub />} />
         {/* 消息中心 - 新的即时通讯平台 */}
         <Route path="/messages" element={<MessageCenter />} />
+        {/* AI助手 - v2.0新增 */}
+        <Route path="/ai-chat" element={<AIChatPage />} />
       </Route>
     </Routes>
   );
@@ -142,6 +149,8 @@ const App: React.FC = () => {
     <AuthProvider>
       <Router>
         <AppContent />
+        {/* AI助手悬浮窗 - 全局可用 */}
+        <AIAssistantFloat />
       </Router>
     </AuthProvider>
   );

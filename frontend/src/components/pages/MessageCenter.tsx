@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import { myApi, messageApi } from '../../utils/api';
+import { myApi, messageApi, userApi } from '../../utils/api';
 import { 
   FaPaperPlane, FaSearch, FaPlus, FaEllipsisV, FaPhone, FaVideo,
   FaUserCircle, FaUsers, FaBellSlash, FaThumbtack,
@@ -99,31 +99,17 @@ const MessageCenter: React.FC = () => {
   // 从后端加载用户列表
   const loadUsers = async () => {
     try {
-      let userList: User[] = [];
+      // 获取系统内所有用户
+      const allUsers = await userApi.getAllUsers();
       
-      if (user?.role === 'mentor') {
-        const students = await myApi.getMyStudents();
-        userList = students.map((s: any) => ({
-          id: s.user_id,
-          name: s.name,
-          role: 'student' as const,
-          status: 'offline',
-          student_no: s.student_no,
-          major: s.major,
-        }));
-      } else if (user?.role === 'student') {
-        const mentor = await myApi.getMyMentor();
-        if (mentor) {
-          userList = [{
-            id: mentor.user_id,
-            name: mentor.name,
-            role: 'mentor' as const,
-            status: 'offline',
-            title: mentor.title,
-            department: mentor.department,
-          }];
-        }
-      }
+      const userList: User[] = allUsers.map((u: any) => ({
+        id: u.id,
+        name: u.nickname || u.email?.split('@')[0] || '用户',
+        role: u.role,
+        status: 'offline',
+        avatar: u.avatar,
+        ...(u.profile || {}),
+      }));
       
       setUsers(userList);
     } catch (error) {
